@@ -1,0 +1,74 @@
+//resource.rc
+
+LANGUAGE 9, 1
+
+#define IDR_VERSIONINFO 0x0001 //1
+
+#define IDI_KAZUSOFT    0x0064 //100
+
+#define IDD_MAIN        0x03E8 //1000
+
+#define IDR_MENUMAIN    0x2710 //10000
+#define IDM_FILE        0x2711 //10001
+#define IDM_OPEN        0x2712 //10002
+#define IDM_SAVE        0x2713 //10003
+#define IDM_SAVEAS      0x2714 //10004
+#define IDM_EXIT        0x2715 //10005
+
+IDR_VERSIONINFO VERSIONINFO
+FILEVERSION     1, 0, 0, 0
+PRODUCTVERSION  1, 0, 0, 0
+FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
+FILEFLAGS       0 //VS_FF_DEBUG | VS_FF_PRIVATEBUILD | VS_FF_SPECIALBUILD
+FILEOS          VOS_NT_WINDOWS32
+FILETYPE        VFT_APP
+FILESUBTYPE     0
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "04090000"
+        BEGIN
+            VALUE "FileVersion", "1.0.0.0\0"
+            VALUE "ProductVersion", "1.0.0.0\0"
+            VALUE "CompanyName", "Kazusoft Co.\0"
+            VALUE "LegalCopyright", "Copyright (c) 2018 Kazusoft Co.\0"
+            VALUE "LegalTrademarks", "Kazusoft Co. and the Kazusoft logo are Trademarks of Lisa Murray\0"
+            VALUE "FileDescription", "Editor for GD3 Tags\0"
+            VALUE "InternalName", "GD3Edit\0"
+            VALUE "OriginalFilename", "GD3Edit.exe\0"
+            VALUE "ProductName", "GD3Edit\0"
+            //VALUE "PrivateBuild", "\0"
+            //VALUE "SpecialBuild", "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 0x0000
+    END
+END
+
+IDI_KAZUSOFT ICON "Res/Kazusoft.ico"
+
+IDD_MAIN DIALOGEX 10, 10, 130, 80
+CAPTION     "GD3Edit"
+FONT        10, "Tahoma", 400, 0, 0
+CLASS       "MAINCLASS"
+LANGUAGE    9, 1
+STYLE       WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SIZEBOX | WS_SYSMENU | WS_TILED | WS_TILEDWINDOW | WS_VISIBLE
+BEGIN
+END
+
+IDR_MENUMAIN MENUEX
+LANGUAGE 9, 1
+BEGIN
+    POPUP "&File", IDM_FILE, MFT_STRING, MFS_ENABLED
+    BEGIN
+        MENUITEM "&Open", IDM_OPEN, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Save", IDM_SAVE, MFT_STRING, MFS_ENABLED
+        MENUITEM "Save &As", IDM_SAVEAS, MFT_STRING, MFS_ENABLED
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit", IDM_EXIT, MFT_STRING, MFS_ENABLED
+    END
+END
+
+//EOF
