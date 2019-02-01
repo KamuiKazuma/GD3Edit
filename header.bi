@@ -20,6 +20,10 @@
     #Print "Compiling in release mode."
 #EndIf
 
+'#Ifndef UNICODE
+'    #Define UNICODE
+'#EndIf
+
 ''make sure target is Windows
 #Ifndef __FB_WIN32__
     #Error "This program must be compiled for Windows."

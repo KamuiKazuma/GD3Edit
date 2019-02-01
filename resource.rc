@@ -28,8 +28,8 @@ LANGUAGE 9, 1
 
 
 IDR_VERSIONINFO VERSIONINFO
-FILEVERSION     1, 0, 0, 24
-PRODUCTVERSION  1, 0, 0, 24
+FILEVERSION     1, 0, 0, 31
+PRODUCTVERSION  1, 0, 0, 31
 FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
 FILEFLAGS       0 //VS_FF_DEBUG | VS_FF_PRIVATEBUILD | VS_FF_SPECIALBUILD
 FILEOS          VOS_NT_WINDOWS32
@@ -40,10 +40,10 @@ BEGIN
     BEGIN
         BLOCK "04090000"
         BEGIN
-            VALUE "FileVersion",        "1.0.0.24\0"
-            VALUE "ProductVersion",     "1.0.0.24\0"
+            VALUE "FileVersion",        "1.0.0.31\0"
+            VALUE "ProductVersion",     "1.0.0.31\0"
             VALUE "CompanyName",        "Kazusoft Co.\0"
-            VALUE "LegalCopyright",     "Copyright (c) 2018 Kazusoft Co.\0"
+            VALUE "LegalCopyright",     "Copyright (c) 2019 Kazusoft Co.\0"
             VALUE "LegalTrademarks",    "Kazusoft Co. and the Kazusoft logo are Trademarks of Lisa Murray\0"
             VALUE "FileDescription",    "Editor for GD3 Tags\0"
             VALUE "InternalName",       "GD3Edit\0"
@@ -89,7 +89,7 @@ STRINGTABLE
 LANGUAGE 9, 1
 BEGIN
     IDS_APPNAME     "GD3Edit"
-    IDS_ABOUT       "GD3Edit\nEditor for GD3 Tags\nCopyright (c) 2018 Kazusoft Co.\nKazusoft Co. and the Kazusoft logo are Trademarks of Lisa Murray\n"
+    IDS_ABOUT       "GD3Edit\nEditor for GD3 Tags\nCopyright (c) 2019 Kazusoft Co.\nKazusoft Co. and the Kazusoft logo are Trademarks of Lisa Murray\n"
     IDS_VER32BIT    "\nWin32 Version"
     IDS_VER64BIT    "\nWin64 Version"
     IDS_BUILDDATE   "\nBuild Date:\t"

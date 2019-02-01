@@ -2,12 +2,12 @@
     
     main.bas - main module
     
-    
+    GD3Edit
     
     Created with Kazusoft's Dialog App Template v2.4
     
     compile with:
-        fbc -s gui "main.bas" "resource.rc"
+        fbc -s gui "main.bas" "resource.res" -x "GD3Edit.exe"
     
 '/
 
@@ -55,7 +55,7 @@ Function WinMain (ByVal hInst As HINSTANCE, ByVal hInstPrev As HINSTANCE, ByVal 
     Dim wcxMainClass As WNDCLASSEX  ''class information for MainClass
     
     ''setup class information and register classes
-    ZeroMemory(@wcxMainClass, SizeOf(wcxMainClass)) ''init memory for wcxMainClass
+    ZeroMemory(@wcxMainClass, SizeOf(WNDCLASSEX)) ''init memory for wcxMainClass
     With wcxMainClass                               ''setup class information for wcxMainClass
         .cbSize         = SizeOf(wcxMainClass)
         .style          = (CS_HREDRAW Or CS_VREDRAW)
@@ -146,7 +146,7 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
                 Case BN_CLICKED         ''button clicked
                     Select Case LoWord(wParam)  ''button id
                         Case IDM_NEW            ''menu/file/new
-                        
+                            
                         Case IDM_OPEN           ''menu/file/open
                             
                         Case IDM_SAVE           ''menu/file/save
@@ -251,11 +251,5 @@ Private Function AboutMsgBox (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As B
     Return(TRUE)
     
 End Function
-
-'Function OpenVGMFile (ByVal hDlg As HWND, ByVal hFile As HANDLE) As BOOL
-'    
-'    
-'    
-'End Function
 
 ''EOF
