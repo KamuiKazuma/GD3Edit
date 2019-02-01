@@ -7,17 +7,29 @@ LANGUAGE 9, 1
 #define IDI_KAZUSOFT    0x0064 //100
 
 #define IDD_MAIN        0x03E8 //1000
+#define IDC_SBR_MAIN    0x03E9 //1001
 
 #define IDR_MENUMAIN    0x2710 //10000
 #define IDM_FILE        0x2711 //10001
-#define IDM_OPEN        0x2712 //10002
-#define IDM_SAVE        0x2713 //10003
-#define IDM_SAVEAS      0x2714 //10004
-#define IDM_EXIT        0x2715 //10005
+#define IDM_NEW         0x2712 //10002
+#define IDM_OPEN        0x2713 //10003
+#define IDM_SAVE        0x2714 //10004
+#define IDM_SAVEAS      0x2715 //10005
+#define IDM_EXIT        0x2716 //10006
+#define IDM_ABOUT       0x2717 //10007
+
+#define IDS_APPNAME     0x0001 //1
+#define IDS_ABOUT       0x0002 //2
+#define IDS_VER32BIT    0x0003 //3
+#define IDS_VER64BIT    0x0004 //4
+#define IDS_BUILDDATE   0x0005 //5
+#define IDS_COMPILER    0x0006 //6
+#define IDS_SIGNATURE   0x0007 //7
+
 
 IDR_VERSIONINFO VERSIONINFO
-FILEVERSION     1, 0, 0, 0
-PRODUCTVERSION  1, 0, 0, 0
+FILEVERSION     1, 0, 0, 24
+PRODUCTVERSION  1, 0, 0, 24
 FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
 FILEFLAGS       0 //VS_FF_DEBUG | VS_FF_PRIVATEBUILD | VS_FF_SPECIALBUILD
 FILEOS          VOS_NT_WINDOWS32
@@ -28,17 +40,17 @@ BEGIN
     BEGIN
         BLOCK "04090000"
         BEGIN
-            VALUE "FileVersion", "1.0.0.0\0"
-            VALUE "ProductVersion", "1.0.0.0\0"
-            VALUE "CompanyName", "Kazusoft Co.\0"
-            VALUE "LegalCopyright", "Copyright (c) 2018 Kazusoft Co.\0"
-            VALUE "LegalTrademarks", "Kazusoft Co. and the Kazusoft logo are Trademarks of Lisa Murray\0"
-            VALUE "FileDescription", "Editor for GD3 Tags\0"
-            VALUE "InternalName", "GD3Edit\0"
-            VALUE "OriginalFilename", "GD3Edit.exe\0"
-            VALUE "ProductName", "GD3Edit\0"
-            //VALUE "PrivateBuild", "\0"
-            //VALUE "SpecialBuild", "\0"
+            VALUE "FileVersion",        "1.0.0.24\0"
+            VALUE "ProductVersion",     "1.0.0.24\0"
+            VALUE "CompanyName",        "Kazusoft Co.\0"
+            VALUE "LegalCopyright",     "Copyright (c) 2018 Kazusoft Co.\0"
+            VALUE "LegalTrademarks",    "Kazusoft Co. and the Kazusoft logo are Trademarks of Lisa Murray\0"
+            VALUE "FileDescription",    "Editor for GD3 Tags\0"
+            VALUE "InternalName",       "GD3Edit\0"
+            VALUE "OriginalFilename",   "GD3Edit.exe\0"
+            VALUE "ProductName",        "GD3Edit\0"
+            //VALUE "PrivateBuild",       "\0"
+            //VALUE "SpecialBuild",       "\0"
         END
     END
     BLOCK "VarFileInfo"
@@ -63,12 +75,26 @@ LANGUAGE 9, 1
 BEGIN
     POPUP "&File", IDM_FILE, MFT_STRING, MFS_ENABLED
     BEGIN
-        MENUITEM "&Open", IDM_OPEN, MFT_STRING, MFS_ENABLED
-        MENUITEM "&Save", IDM_SAVE, MFT_STRING, MFS_ENABLED
-        MENUITEM "Save &As", IDM_SAVEAS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&New", IDM_NEW, MFT_STRING, MFS_DISABLED
+        MENUITEM "&Open", IDM_OPEN, MFT_STRING, MFS_DISABLED
+        MENUITEM "&Save", IDM_SAVE, MFT_STRING, MFS_DISABLED
+        MENUITEM "Save &As", IDM_SAVEAS, MFT_STRING, MFS_DISABLED
         MENUITEM SEPARATOR
         MENUITEM "E&xit", IDM_EXIT, MFT_STRING, MFS_ENABLED
     END
+    MENUITEM "&About", IDM_ABOUT, MFT_STRING, MFS_ENABLED
+END
+
+STRINGTABLE
+LANGUAGE 9, 1
+BEGIN
+    IDS_APPNAME     "GD3Edit"
+    IDS_ABOUT       "GD3Edit\nEditor for GD3 Tags\nCopyright (c) 2018 Kazusoft Co.\nKazusoft Co. and the Kazusoft logo are Trademarks of Lisa Murray\n"
+    IDS_VER32BIT    "\nWin32 Version"
+    IDS_VER64BIT    "\nWin64 Version"
+    IDS_BUILDDATE   "\nBuild Date:\t"
+    IDS_COMPILER    "\nCompiler Information:"
+    IDS_SIGNATURE   "\nSignature:\t\t"
 END
 
 //EOF

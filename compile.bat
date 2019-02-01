@@ -9,16 +9,16 @@ REM 3 = Compile Script not found
 REM Compile modules
 IF EXIST ".\compile-module.bat" (
 	CALL ".\compile-module.bat" ".\Mod\CreateToolTip\CreateToolTip.bas" ".\Mod\CreateToolTip\libCreateToolTip.a"
-	IF NOT ERRORLEVEL 0 GOTO ERR%ERRORLEVEL%
+	IF NOT ERRORLEVEL 0 GOTO ERR
 	CALL ".\compile-module.bat" ".\Mod\ErrMsgBox\ErrMsgBox.bas" ".\Mod\ErrMsgBox\libErrMsgBox.a"
-	IF NOT ERRORLEVEL 0 GOTO ERR%ERRORLEVEL%
+	IF NOT ERRORLEVEL 0 GOTO ERR
 	CALL ".\compile-module.bat" ".\Mod\HeapPtrList\HeapPtrList.bas" ".\Mod\HeapPtrList\libHeapPtrList.a"
-	IF NOT ERRORLEVEL 0 GOTO ERR%ERRORLEVEL%
+	IF NOT ERRORLEVEL 0 GOTO ERR
 	CALL ".\compile-module.bat" ".\Mod\OpenProgHKey\OpenProgHKey.bas" ".\Mod\OpenProgHKey\libOpenProgHKey.a"
-	IF NOT ERRORLEVEL 0 GOTO ERR%ERRORLEVEL%
+	IF NOT ERRORLEVEL 0 GOTO ERR
 ) ELSE (
 	SET ERRORLEVEL=3
-	GOTO ERR%ERRORLEVEL%
+	GOTO ERR
 )
 
 REM Compile resource file
@@ -26,11 +26,11 @@ IF EXIST ".\resource.rc" (
 	GoRC /r /nu ".\resource.rc"
 	IF NOT EXIST ".\resource.res" (
 		SET ERRORLEVEL=2
-		GOTO ERR%ERRORLEVEL%
+		GOTO ERR
 	)
 ) ELSE (
 	SET ERRORLEVEL=1
-	GOTO ERR%ERRORLEVEL%
+	GOTO ERR
 )
 
 REM Compile main module
@@ -42,26 +42,17 @@ IF EXIST ".\main.bas" (
 	)
 	IF NOT EXIST ".\GD3Edit.exe" (
 		SET ERRORLEVEL=2
-		GOTO ERR%ERRORLEVEL%
+		GOTO ERR
 	)
 ) ELSE (
 	SET ERRORLEVEL=1
-	GOTO ERR%ERRORLEVEL%
+	GOTO ERR
 )
 
+SET ERRORLEVEL=0
 GOTO EOF
 
-:ERR0
-ECHO ERROR: No error.
-GOTO EOF
-:ERR1
-ECHO ERROR: Source file not found.
-GOTO EOF
-:ERR2
-ECHO ERROR: Output file not found.
-GOTO EOF
-:ERR3
-ECHO ERROR: Compile script not found.
-GOTO EOF
+:ERR
+ECHO ERROR: %ERRORLEVEL%
 
 :EOF

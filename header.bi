@@ -9,6 +9,16 @@
 ''preprocesser
 #Pragma Once
 
+#Ifdef __FB_64BIT__
+    #Print "Compiling for Win64."
+#Else
+    #Print "Compiling for Win32."
+#EndIf
+#If __FB_DEBUG__
+    #Print "Compiling in debug mode."
+#Else
+    #Print "Compiling in release mode."
+#EndIf
 
 ''make sure target is Windows
 #Ifndef __FB_WIN32__
@@ -22,6 +32,7 @@
 
 ''include header files
 #Include Once "windows.bi"
+#Include Once "win/commctrl.bi"
 #Include Once "win/commdlg.bi"
 #Include "mod/createtooltip/createtooltip.bi"
 #Include "mod/errmsgbox/errmsgbox.bi"
@@ -36,7 +47,7 @@ Const MainClass = "MAINCLASS"   ''main window class
 Dim Shared hInstance As HMODULE ''instance handle
 Dim Shared lpszCmdLine As LPSTR ''command line
 Dim Shared hWin As HWND         ''main window handle
-
+Dim Shared hHeap As HANDLE      ''handle to the main application heap
 
 ''declare functions
 
@@ -48,5 +59,8 @@ Declare Sub StartMainDlg (ByVal nShowCmd As INT32, ByVal lParam As LPARAM)
 
 ''main dialog procedure
 Declare Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPARAM, ByVal lParam As LPARAM) As LRESULT
+
+''displays the about message box
+Declare Function AboutMsgBox (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As BOOL
 
 ''EOF

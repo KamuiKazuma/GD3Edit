@@ -21,27 +21,33 @@
 
 hInstance   = GetModuleHandle(NULL) ''get a handle to this module's instance
 lpszCmdLine = GetCommandLine()      ''get the command-line parameters
-''InitCommonControls()
+'Dim iccx As InitCommonControlsEx
+'With iccx
+'    .dwSize = SizeOf(iccx)
+'    .dwICC  = (ICC_STANDARD_CLASSES Or ICC_BAR_CLASSES)
+'End With
+'If (InitCommonControlsEx(@iccx) = FALSE) Then ExitProcess(GetLastError())
+InitCommonControls()
 
 Dim uExitCode As UINT32 = Cast(UINT32, WinMain(hInstance, NULL, lpszCmdLine, SW_SHOWNORMAL))
 
 #If __FB_DEBUG__
-    ? "uExitCode", "= 0x"; Hex(uExitCode, 8)
+    ? !"uExitCode\t= 0x"; Hex(uExitCode, 8)
 #EndIf
 
 ExitProcess(uExitCode)
-End (uExitCode)
+End(uExitCode)
 
 ''main function
 Function WinMain (ByVal hInst As HINSTANCE, ByVal hInstPrev As HINSTANCE, ByVal lpszCmdLine As LPSTR, ByVal nShowCmd As INT32) As INT32
     
     #If __FB_DEBUG__
         ? "Calling:", __FUNCTION__
-        ? "hInst", "= 0x"; Hex(hInst, 8)
-        ? "hInstPrev", "= 0x"; Hex(hInstPrev, 8)
-        ? "lpszCmdLine", "= 0x"; Hex(lpszCmdLine, 8)
-        ? "*lpszCmdLine:", *lpszCmdLine
-        ? "nShowCmd", "= 0x"; Hex(nShowCmd, 8)
+        ? !"hInst\t= 0x"; Hex(hInst, 8)
+        ? !"hInstPrev\t= 0x"; Hex(hInstPrev, 8)
+        ? !"lpszCmdLine\t= 0x"; Hex(lpszCmdLine, 8)
+        ? !"*lpszCmdLine\t= "; *lpszCmdLine
+        ? !"nShowCmd\t= 0x"; hex(nShowCmd, 8)
     #EndIf
     
     ''declare local variables
@@ -65,6 +71,10 @@ Function WinMain (ByVal hInst As HINSTANCE, ByVal hInstPrev As HINSTANCE, ByVal 
         .hIconSm        = .hIcon
     End With
     RegisterClassEx(@wcxMainClass)                  ''register MainClass
+    
+    ''get the default heap
+    hHeap = GetProcessHeap()
+    If (hHeap = INVALID_HANDLE_VALUE) Then Return(GetLastError())
     
     ''start the main dialog
     StartMainDlg(nShowCmd, NULL)
@@ -93,8 +103,8 @@ Private Sub StartMainDlg (ByVal nShowCmd As INT32, ByVal lParam As LPARAM)
     
     #If __FB_DEBUG__
         ? "Calling:", __FUNCTION__
-        ? "nShowCmd", "= 0x"; Hex(nShowCmd, 8)
-        ? "lParam", "= 0x"; Hex(lParam, 8)
+        ? !"nShowCmd\t= 0x"; Hex(nShowCmd, 8)
+        ? !"lParam\t= 0x"; Hex(lParam, 8)
     #EndIf
     
     ''create, show, and update the main dialog
@@ -117,6 +127,8 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
             ''set program's icon
             SendMessage(hWnd, WM_SETICON, NULL, Cast(LPARAM, LoadIcon(hInstance, MAKEINTRESOURCE(IDI_KAZUSOFT))))
             
+            If (CreateWindowEx(NULL, STATUSCLASSNAME, NULL, WS_CHILD Or WS_VISIBLE, 0, 0, 0, 0, hWnd, Cast(HMENU, IDC_SBR_MAIN), hInstance, NULL) = INVALID_HANDLE_VALUE) Then SysErrMsgBox(hWnd, GetLastError())
+            
         Case WM_DESTROY     ''destroy the dialog
             
             ''post quit message
@@ -130,9 +142,11 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
             DestroyWindow(hWnd)
             
         Case WM_COMMAND     ''command
-            Select Case HiWord(lParam)  ''command code
+            Select Case HiWord(wParam)  ''command code
                 Case BN_CLICKED         ''button clicked
-                    Select Case LoWord(lParam)  ''button id
+                    Select Case LoWord(wParam)  ''button id
+                        Case IDM_NEW            ''menu/file/new
+                        
                         Case IDM_OPEN           ''menu/file/open
                             
                         Case IDM_SAVE           ''menu/file/save
@@ -142,6 +156,10 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
                         Case IDM_EXIT           ''menu/file/exit
                             
                             SendMessage(hWnd, WM_CLOSE, NULL, NULL)
+                            
+                        Case IDM_ABOUT          ''menu/about
+                            
+                            If (AboutMsgBox(hInstance, hWnd) = FALSE) Then SysErrMsgBox(hWnd, GetLastError())
                             
                     End Select
                     
@@ -158,5 +176,86 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
     Return(ERROR_SUCCESS)
     
 End Function
+
+''display the about message box
+Private Function AboutMsgBox (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As BOOL
+    
+    #If __FB_DEBUG__
+        ? "Calling:", __FUNCTION__
+        ? !"hInst\t= 0x"; Hex(hInst, 8)
+        ? !"hDlg\t= 0x"; Hex(hDlg, 8)
+    #EndIf
+    
+    ''set loading cursor
+    Dim hCursorPrev As HCURSOR = SetCursor(LoadCursor(NULL, IDC_WAIT))
+    
+    ''get a lock on the heap
+    If (HeapLock(hHeap) = FALSE) Then Return(FALSE)
+    
+    ''allocate space for the unformatted strings
+    Dim plpszUnformatted As LPTSTR Ptr
+    SetLastError(Cast(DWORD32, HeapAllocPtrList(hHeap, Cast(LPVOID Ptr, plpszUnformatted), CB_ABT, C_ABT)))
+    If (GetLastError()) Then Return(FALSE)
+    
+    ''load unformatted strings
+    SetLastError(Cast(DWORD32, LoadStringRange(hInst, plpszUnformatted, IDS_APPNAME, CCH_ABT, C_ABT)))
+    If (GetLastError()) Then Return(FALSE)
+    
+    ''allocate space for the formatted string
+    Dim lpszFormatted As LPTSTR = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, Cast(SIZE_T, (C_ABT * CB_ABT))))
+    If (lpszFormatted = NULL) Then Return(FALSE)
+    
+    ''format string
+    #Ifdef __FB_64BIT__
+        *lpszFormatted = (*plpszUnformatted[ABT_ABOUT] + *plpszUnformatted[ABT_VER64BIT] + *plpszUnformatted[ABT_BUILDDATE] + __DATE__ + Space(1) + __TIME__ + *plpszUnformatted[ABT_COMPILER] + *plpszUnformatted[ABT_SIGNATURE] + __FB_SIGNATURE__ + *plpszUnformatted[ABT_BUILDDATE] + __FB_BUILD_DATE__)
+    #Else
+        *lpszFormatted = (*plpszUnformatted[ABT_ABOUT] + *plpszUnformatted[ABT_VER32BIT] + *plpszUnformatted[ABT_BUILDDATE] + __DATE__ + Space(1) + __TIME__ + *plpszUnformatted[ABT_COMPILER] + *plpszUnformatted[ABT_SIGNATURE] + __FB_SIGNATURE__ + *plpszUnformatted[ABT_BUILDDATE] + __FB_BUILD_DATE__)
+    #EndIf
+    
+    ''allocate space for message box parameters
+    Dim lpMbp As LPMSGBOXPARAMS = Cast(LPMSGBOXPARAMS, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, Cast(SIZE_T, SizeOf(MSGBOXPARAMS))))
+    If (lpMbp = NULL) Then Return(FALSE)
+    
+    ''set up message box parameters
+    With *lpMbp
+        .cbSize = SizeOf(MSGBOXPARAMS)
+        .hwndOwner = hDlg
+        .hInstance = hInst
+        .lpszText = lpszFormatted
+        .lpszCaption = plpszUnformatted[ABT_APPNAME]
+        .dwStyle = MB_USERICON
+        .lpszIcon = MAKEINTRESOURCE(IDI_KAZUSOFT)
+        .dwLanguageId = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
+    End With
+    
+    ''restore previous cursor
+    hCursorPrev = SetCursor(hCursorPrev)
+    
+    ''display message box
+    If (MessageBoxIndirect(lpMbp) = 0) Then Return(FALSE)
+    
+    ''set loading cursor
+    hCursorPrev = SetCursor(hCursorPrev)
+    
+    ''free memory
+    If (HeapFree(hHeap, NULL, Cast(LPVOID, lpMbp)) = FALSE) Then Return(FALSE)
+    If (HeapFree(hHeap, NULL, Cast(LPVOID, lpszFormatted)) = FALSE) Then Return(FALSE)
+    SetLastError(Cast(DWORD32, HeapFreePtrList(hHeap, Cast(LPVOID Ptr, plpszUnformatted), CB_ABT, C_ABT)))
+    If (GetLastError()) Then Return(FALSE)
+    
+    ''restore previous cursor
+    SetCursor(hCursorPrev)
+    
+    ''return
+    SetLastError(ERROR_SUCCESS)
+    Return(TRUE)
+    
+End Function
+
+'Function OpenVGMFile (ByVal hDlg As HWND, ByVal hFile As HANDLE) As BOOL
+'    
+'    
+'    
+'End Function
 
 ''EOF
