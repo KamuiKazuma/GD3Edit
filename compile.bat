@@ -6,16 +6,11 @@ REM 1 = Source file not found
 REM 2 = Output file not found
 REM 3 = Compile Script not found
 
-REM Compile modules
 IF EXIST ".\compile-module.bat" (
-	CALL ".\compile-module.bat" ".\Mod\CreateToolTip\CreateToolTip.bas" ".\Mod\CreateToolTip\libCreateToolTip.a"
-	IF NOT ERRORLEVEL 0 GOTO ERR
-	CALL ".\compile-module.bat" ".\Mod\ErrMsgBox\ErrMsgBox.bas" ".\Mod\ErrMsgBox\libErrMsgBox.a"
-	IF NOT ERRORLEVEL 0 GOTO ERR
-	CALL ".\compile-module.bat" ".\Mod\HeapPtrList\HeapPtrList.bas" ".\Mod\HeapPtrList\libHeapPtrList.a"
-	IF NOT ERRORLEVEL 0 GOTO ERR
-	CALL ".\compile-module.bat" ".\Mod\OpenProgHKey\OpenProgHKey.bas" ".\Mod\OpenProgHKey\libOpenProgHKey.a"
-	IF NOT ERRORLEVEL 0 GOTO ERR
+	CALL ".\compile-module.bat" ".\Mod\CreateToolTip\CreateToolTip.bas" ".\libCreateToolTip.a"
+	CALL ".\compile-module.bat" ".\Mod\ErrMsgBox\ErrMsgBox.bas" ".\libErrMsgBox.a"
+	CALL ".\compile-module.bat" ".\Mod\HeapPtrList\HeapPtrList.bas" ".\libHeapPtrList.a"
+	CALL ".\compile-module.bat" ".\Mod\OpenProgHKey\OpenProgHKey.bas" ".\libOpenProgHKey.a"
 ) ELSE (
 	SET ERRORLEVEL=3
 	GOTO ERR
@@ -53,6 +48,9 @@ SET ERRORLEVEL=0
 GOTO EOF
 
 :ERR
-ECHO ERROR: %ERRORLEVEL%
+ECHO.
+ECHO %~0 ERROR: %ERRORLEVEL%
+EXIT
 
 :EOF
+EXIT
