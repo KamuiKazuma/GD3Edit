@@ -67,7 +67,7 @@ Function WinMain (ByVal hInst As HINSTANCE, ByVal hInstPrev As HINSTANCE, ByVal 
         .hCursor        = LoadCursor(NULL, IDC_ARROW)
         .hbrBackground  = Cast(HBRUSH, (COLOR_BTNFACE + 1))
         .lpszMenuName   = MAKEINTRESOURCE(IDR_MENUMAIN)
-        .lpszClassName  = @MainClass
+        .lpszClassName  = Cast(LPCTSTR, @MainClass)
         .hIconSm        = .hIcon
     End With
     RegisterClassEx(@wcxMainClass)                  ''register MainClass
@@ -91,7 +91,7 @@ Function WinMain (ByVal hInst As HINSTANCE, ByVal hInstPrev As HINSTANCE, ByVal 
     Wend
     
     ''unregister classes
-    UnregisterClass(@MainClass, hInst)  ''unregister MainClass
+    UnregisterClass(Cast(LPCTSTR, @MainClass), hInst)  ''unregister MainClass
     
     ''return exit code
     Return(msg.wParam)
@@ -165,6 +165,23 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
                     
             End Select
             
+        Case WM_SIZE
+            
+            Dim rcSbr As RECT
+            Dim rcParent As RECT
+            
+            ''get rects for statusbar and main dialog, and subtract the statusbar's height from that of the main window
+            With rcParent
+                .right  = LoWord(lParam)
+                .bottom = HiWord(lParam)
+            End With
+            If (GetClientRect(GetDlgItem(hWnd, IDC_SBR_MAIN), @rcSbr) = FALSE) Then SysErrMsgBox(hWnd, GetLastError())
+            rcParent.bottom -= rcSbr.bottom
+            
+            If (EnumChildWindows(hWnd, @ResizeMainChildren, Cast(LPARAM, @rcParent)) = FALSE) Then SysErrMsgBox(hWnd, GetLastError())
+            
+            Return(Cast(LRESULT, TRUE))
+            
         Case Else           ''otherwise
             
             ''use the default window procedure to return a value
@@ -174,6 +191,36 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
     
     ''return success code (0)
     Return(ERROR_SUCCESS)
+    
+End Function
+
+Private Function ResizeMainChildren (ByVal hWnd As HWND, ByVal lParam As LPARAM) As BOOL
+    
+    ''get parent rect from lParam
+    Dim lprcParent As LPRECT = Cast(LPRECT, lParam)
+    If (lprcParent = NULL) Then
+        SetLastError(ERROR_INVALID_PARAMETER)
+        Return(FALSE)
+    End If
+    
+    ''resize child window
+    Dim rcChild As RECT
+    With rcChild
+        Select Case GetWindowLong(hWnd, GWL_ID)
+            Case IDC_SBR_MAIN
+                .left   = 0
+                .top    = 0
+                .right  = 0
+                .bottom = 0
+        End Select
+        
+        ''resize the child window
+        If (MoveWindow(hWnd, .left, .top, .right, .bottom, TRUE) = FALSE) Then Return(FALSE)
+        
+    End With
+    
+    ''return
+    Return(TRUE)
     
 End Function
 

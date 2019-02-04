@@ -55,4 +55,3 @@ ECHO %~0 ERROR: Output file %~f2 not found.
 ECHO.
 
 :EOF
-EXIT
