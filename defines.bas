@@ -32,14 +32,13 @@
 
 ''strings
 #Define IDS_APPNAME     &h0001
-#Define IDS_DESCRIPTION &h0002
-#Define IDS_COPYRIGHT   &h0003
-#Define IDS_TRADEMARK   &h0004
-#Define IDS_VER32BIT    &h0005
-#Define IDS_VER64BIT    &h0006
-#Define IDS_BUILDDATE   &h0007
-#Define IDS_COMPILER    &h0008
-#Define IDS_SIGNATURE   &h0009
+#Define IDS_ABOUT       &h0002
+#Define IDS_VER32BIT    &h0003
+#Define IDS_VER64BIT    &h0004
+#Define IDS_BUILDDATE   &h0005
+#Define IDS_COMPILER    &h0006
+#Define IDS_SIGNATURE   &h0007
+#Define IDS_FILTER      &h0008
 
 ''HeapPtrList info for about message
 #Define CCH_ABT         &h00000200 /'512'/

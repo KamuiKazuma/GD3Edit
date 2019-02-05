@@ -36,8 +36,8 @@
 
 ''include header files
 #Include Once "windows.bi"
-#Include Once "win/commctrl.bi"
 #Include Once "win/commdlg.bi"
+#Include Once "win/commctrl.bi"
 #Include "mod/createtooltip/createtooltip.bi"
 #Include "mod/errmsgbox/errmsgbox.bi"
 #Include "mod/heapptrlist/heapptrlist.bi"
@@ -47,11 +47,18 @@
 ''define constants
 Const MainClass = "MAINCLASS"   ''main window class
 
+Type FILENAMEINFO
+    lpszFile As LPTSTR
+    cchFile As ULONG32
+    lpszFileTitle As LPTSTR
+    cchFileTitle As ULONG32
+End Type
+
 ''declare shared variables
-Dim Shared hInstance As HMODULE ''instance handle
-Dim Shared lpszCmdLine As LPSTR ''command line
-Dim Shared hWin As HWND         ''main window handle
-Dim Shared hHeap As HANDLE      ''handle to the main application heap
+Dim Shared hInstance As HINSTANCE   ''instance handle
+Dim Shared lpszCmdLine As LPSTR     ''command line
+Dim Shared hWin As HWND             ''main window handle
+Dim Shared hHeap As HANDLE          ''handle to the main application heap
 
 ''declare functions
 
@@ -65,6 +72,8 @@ Declare Sub StartMainDlg (ByVal nShowCmd As INT32, ByVal lParam As LPARAM)
 Declare Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPARAM, ByVal lParam As LPARAM) As LRESULT
 
 Declare Function ResizeMainChildren (ByVal hWnd As HWND, ByVal lParam As LPARAM) As BOOL
+
+Declare Function BrowseForFile (ByVal hHeap As HANDLE, ByVal hInst As HINSTANCE, ByVal hDlg As HWND, ByVal pfni As FILENAMEINFO Ptr) As BOOL
 
 ''displays the about message box
 Declare Function AboutMsgBox (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As BOOL

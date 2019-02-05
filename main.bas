@@ -73,7 +73,7 @@ Function WinMain (ByVal hInst As HINSTANCE, ByVal hInstPrev As HINSTANCE, ByVal 
     RegisterClassEx(@wcxMainClass)                  ''register MainClass
     
     ''get the default heap
-    hHeap = GetProcessHeap()
+    hHeap = HeapCreate(NULL, NULL, NULL)
     If (hHeap = INVALID_HANDLE_VALUE) Then Return(GetLastError())
     
     ''start the main dialog
@@ -131,6 +131,8 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
             
         Case WM_DESTROY     ''destroy the dialog
             
+            If (HeapDestroy(hHeap) = FALSE) Then SysErrMsgBox(hWnd, GetLastError())
+            
             ''post quit message
             PostQuitMessage(ERROR_SUCCESS)
             
@@ -148,6 +150,67 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
                         Case IDM_NEW            ''menu/file/new
                             
                         Case IDM_OPEN           ''menu/file/open
+                            
+                            'If (HeapLock(hHeap) = FALSE) Then SysErrMsgBox(hWnd, GetLastError())
+                            '
+                            '''allocate space for file name
+                            'Dim lpszFile As LPTSTR = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, SizeOf(TCHAR) * MAX_PATH))
+                            'If (lpszFile = NULL) Then SysErrMsgBox(hWnd, GetLastError())
+                            '
+                            '''allocate file filter
+                            'Dim lpszFilt As LPTSTR = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, SizeOf(TCHAR) * 512))
+                            'If (lpszFilt = NULL) Then SysErrMsgBox(hWnd, GetLastError())
+                            'If (LoadString(hInstance, IDS_FILTER, lpszFilt, 512) = 0) Then SysErrMsgBox(hWnd, GetLastError())
+                            '
+                            '''setup ofn
+                            'Dim ofn As OPENFILENAME
+                            'ZeroMemory(@ofn, SizeOf(OPENFILENAME))
+                            'With ofn
+                            '    .lStructSize        = SizeOf(OPENFILENAME)
+                            '    .hwndOwner          = hWnd
+                            '    .hInstance          = hInstance
+                            '    .lpstrFilter        = Cast(LPCTSTR, lpszFilt)
+                            '    .lpstrCustomFilter  = NULL
+                            '    .nMaxCustFilter     = NULL
+                            '    .nFilterIndex       = 1
+                            '    .lpstrFile          = lpszFile
+                            '    .nMaxFile           = MAX_PATH
+                            '    .lpstrFileTitle     = NULL
+                            '    .nMaxFileTitle      = NULL
+                            '    .lpstrInitialDir    = NULL
+                            '    .lpstrTitle         = NULL
+                            '    .Flags              = (OFN_DONTADDTORECENT Or OFN_FILEMUSTEXIST Or OFN_PATHMUSTEXIST)
+                            '    .nFileOffset        = NULL
+                            '    .nFileExtension     = NULL
+                            '    .lpstrDefExt        = NULL
+                            'End With
+                            '
+                            'If (GetOpenFileName(Cast(LPOPENFILENAME, @ofn)) = TRUE) Then
+                            '    If (SetDlgItemText(hWnd, IDC_SBR_MAIN, Cast(LPCTSTR, lpszFile)) = FALSE) Then SysErrMsgBox(hWnd, GetLastError())
+                            'End If
+                            ''If (SetDlgItemText(hWnd, IDC_SBR_MAIN, Cast(LPCTSTR, lpszFile)) = FALSE) Then SysErrMsgBox(hWnd, GetLastError())
+                            '
+                            'If (HeapFree(hHeap, NULL, Cast(LPVOID, lpszFilt)) = FALSE) Then SysErrMsgBox(hWnd, GetLastError())
+                            'If (HeapFree(hHeap, NULL, Cast(LPVOID, lpszFile)) = FALSE) Then SysErrMsgBox(hWnd, GetLastError())
+                            'If (HeapUnlock(hHeap) = FALSE) Then SysErrMsgBox(hWnd, GetLastError())
+                            '
+                            
+                            If (HeapLock(hHeap) = FALSE) Then SysErrMsgBox(hWnd, GetLastError())
+                            Dim fni As FILENAMEINFO
+                            With fni
+                                .lpszFile       = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, Cast(SIZE_T, MAX_PATH * SizeOf(TCHAR))))
+                                .cchFile        = MAX_PATH
+                                .lpszFileTitle  = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, Cast(SIZE_T, MAX_PATH * SizeOf(TCHAR))))
+                                .cchFileTitle   = MAX_PATH
+                            End With
+                            
+                            If (BrowseForFile(hHeap, hInstance, hWnd, @fni) = FALSE) Then SysErrMsgBox(hWnd, GetLastError())
+                            
+                            SetDlgItemText(hWnd, IDC_SBR_MAIN, Cast(LPCTSTR, fni.lpszFileTitle))
+                            
+                            HeapFree(hHeap, NULL, Cast(LPVOID, fni.lpszFile))
+                            HeapFree(hHeap, NULL, Cast(LPVOID, fni.lpszFileTitle))
+                            If (HeapLock(hHeap) = FALSE) Then SysErrMsgBox(hWnd, GetLastError())
                             
                         Case IDM_SAVE           ''menu/file/save
                             
@@ -220,6 +283,79 @@ Private Function ResizeMainChildren (ByVal hWnd As HWND, ByVal lParam As LPARAM)
     End With
     
     ''return
+    Return(TRUE)
+    
+End Function
+
+Private Function BrowseForFile (ByVal hHeap As HANDLE, ByVal hInst As HINSTANCE, ByVal hDlg As HWND, ByVal pfni As FILENAMEINFO Ptr) As BOOL
+    
+    #If __FB_DEBUG__
+        ? "Calling", __FUNCTION__
+        ? !"hHeap\t= 0x"; Hex(hHeap, 8)
+        ? !"hInst\t= 0x"; Hex(hInst, 8)
+        ? !"pfni\t= 0x"; Hex(pfni, 8)
+    #EndIf
+    
+    ''set waiting cursor
+    Dim hCurPrev As HCURSOR = SetCursor(LoadCursor(hInst, IDC_WAIT))
+    If (hCurPrev = INVALID_HANDLE_VALUE) Then Return(FALSE)
+    
+    ''get a lock on the heap
+    If (HeapLock(hHeap) = FALSE) Then Return(FALSE)
+    
+    ''allocate file filter
+    Dim lpszFilter As LPTSTR = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, Cast(SIZE_T, (256 * SizeOf(TCHAR)))))
+    If (lpszFilter = NULL) Then Return(FALSE)
+    
+    ''load file filter
+    If (LoadString(hInst, IDS_FILTER, lpszFilter, 256) = 0) Then Return(FALSE)
+    
+    ''allocate ofn
+    Dim lpOfn As LPOPENFILENAME = Cast(LPOPENFILENAME, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, SizeOf(OPENFILENAME)))
+    If (lpOfn = NULL) Then Return(FALSE)
+    
+    ''setup ofn
+    With *lpOfn
+        .lStructSize        = SizeOf(OPENFILENAME)
+        .hwndOwner          = hDlg
+        .hInstance          = hInst
+        .lpstrFilter        = Cast(LPCTSTR, lpszFilter)
+        .lpstrCustomFilter  = NULL
+        .nMaxCustFilter     = NULL
+        .nFilterIndex       = 1
+        .lpstrFile          = pfni->lpszFile
+        .nMaxFile           = pfni->cchFile
+        .lpstrFileTitle     = pfni->lpszFileTitle
+        .nMaxFileTitle      = pfni->cchFileTitle
+        .lpstrInitialDir    = NULL
+        .lpstrTitle         = NULL
+        .Flags              = (OFN_DONTADDTORECENT Or OFN_FILEMUSTEXIST Or OFN_PATHMUSTEXIST)
+        .nFileOffset        = NULL
+        .nFileExtension     = NULL
+        .lpstrDefExt        = NULL
+    End With
+    
+    ''restore old cursor
+    hCurPrev = SetCursor(hCurPrev)
+    
+    ''browse for file
+    GetOpenFileName(lpOfn)
+    
+    ''set waiting cursor
+    hCurPrev = SetCursor(hCurPrev)
+    
+    ''free memory
+    If (HeapFree(hHeap, NULL, Cast(LPVOID, lpOfn)) = FALSE) Then Return(FALSE)
+    If (HeapFree(hHeap, NULL, Cast(LPVOID, lpszFilter)) = FALSE) Then Return(FALSE)
+    
+    ''unlock the heap
+    If (HeapUnlock(hHeap) = FALSE) Then Return(FALSE)
+    
+    ''restore old cursor
+    SetCursor(hCurPrev)
+    
+    ''return
+    SetLastError(ERROR_SUCCESS)
     Return(TRUE)
     
 End Function
