@@ -310,11 +310,30 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
                             SetLastError(InitFileNameInfo(hFni, @fni))
                             If (GetLastError()) Then Return(SysErrMsgBox(hWnd, GetLastError()))
                             
+                            ''open browse dialog box
                             If (BrowseForFile(hInstance, hWnd, @fni) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
                             
+                            ''update title bar
+                            If (SetMainWndTitle(hInstance, hWnd, Cast(LPCTSTR, fni.lpszFileTitle)) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
+                            
+                            ''open file
+                            Dim hFile As HANDLE = CreateFile(Cast(LPCTSTR, fni.lpszFile), GENERIC_READ, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL)
+                            If (hFile = INVALID_HANDLE_VALUE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
+                            
+                            ''read from file
+                            Dim szVGM As ZString*6
+                            Dim dwRead As DWORD32
+                            If (ReadFile(hFile, Cast(LPVOID, @szVGM), SizeOf(szVGM), @dwRead, NULL) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
+                            ? !"szVGM\t= "; szVGM
+                            
+                            ''close file
+                            If (CloseHandle(hFile) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
+                            
+                            ''free FNI
                             SetLastError(FreeFileNameInfo(hFni, @fni))
                             If (GetLastError()) Then Return(SysErrMsgBox(hWnd, GetLastError()))
                             
+                            ''destroy the local heap
                             If (HeapDestroy(hFni) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
                             
                         Case IDM_SAVE           ''menu/file/save
@@ -333,7 +352,7 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
                     
             End Select
             
-        Case WM_SIZE
+        Case WM_SIZE        ''window resized
             
             Dim rcSbr As RECT
             Dim rcParent As RECT
@@ -475,15 +494,19 @@ Private Function BrowseForFile (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, By
     
 End Function
 
-Private Function SetNewMainWndTitle (ByVal hHeap As HANDLE, ByVal hInst As HINSTANCE, ByVal hDlg As HWND, ByVal pFni As FILENAMEINFO Ptr) As BOOL
+Private Function SetMainWndTitle (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, ByVal lpszFile As LPCTSTR) As BOOL
     
     #If __FB_DEBUG__
         ? "Calling:", __FUNCTION__
-        ? !"hHeap\t= 0x"; Hex(hHeap, 8)
         ? !"hInst\t= 0x"; Hex(hInst, 8)
         ? !"hDlg\t= 0x"; Hex(hDlg, 8)
-        ? !"pFni\t= 0x"; Hex(pFni, 8)
+        ? !"lpszFile\t= 0x"; Hex(lpszFile, 8)
+        ? !"*lpszFile\t= "; *lpszFile
     #EndIf
+    
+    ''create a local heap
+    Dim hHeap As HANDLE = HeapCreate(NULL, CB_APPNAME, NULL)
+    If (hHeap = INVALID_HANDLE_VALUE) Then Return(FALSE)
     
     ''get a lock on the heap
     If (HeapLock(hHeap) = FALSE) Then Return(FALSE)
@@ -501,56 +524,42 @@ Private Function SetNewMainWndTitle (ByVal hHeap As HANDLE, ByVal hInst As HINST
         ? !"*lpszAppName\t= "; *lpszAppName
     #EndIf
     
-    ''calculate # of TCHARs to allocate
-    Dim cchTitle As ULONG32
-    If (pFni) Then
-        If (pCfg->ShowFullPath) Then
-            cchTitle = (CCH_APPNAME + MAX_PATH + 5)
-        Else
-            cchTitle = (CCH_APPNAME + MAX_PATH + 5)
-        End If
-    Else
-        cchTitle = CCH_APPNAME
-    End If
-    #If __FB_DEBUG__
-        ? !"cchTitle\t= "; cchTitle
-    #EndIf
-    
-    ''calculate # of BYTEs to allocate
-    'Dim cbTitle As SIZE_T = Cast(SIZE_T, (cchTitle * SizeOf(TCHAR)))
+    '''calculate # of TCHARs to allocate
+    'Dim cchTitle As ULONG32
+    'If (pFni) Then
+    '    If (pCfg->ShowFullPath) Then
+    '        cchTitle = (CCH_APPNAME + MAX_PATH + 5)
+    '    Else
+    '        cchTitle = (CCH_APPNAME + MAX_PATH + 5)
+    '    End If
+    'Else
+    '    cchTitle = CCH_APPNAME
+    'End If
     '#If __FB_DEBUG__
-    '    ? !"cbTitle\t= "; cbTitle
+    '    ? !"cchTitle\t= "; cchTitle
     '#EndIf
     
     ''allocate space for new window title
-    Dim lpszTitle As LPTSTR = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, Cast(SIZE_T, (cchTitle * SizeOf(TCHAR)))))
+    Dim lpszTitle As LPTSTR = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, Cast(SIZE_T, (MAX_PATH * SizeOf(TCHAR)))))
     If (lpszTitle = NULL) Then Return(FALSE)
     #If __FB_DEBUG__
         ? !"lpszTitle\t= 0x"; Hex(lpszTitle, 8)
     #EndIf
     
     ''format new title string
-    If (pFni) Then
-        If (pCfg->ShowFullPath) Then
-            *lpszTitle = (*lpszAppName + " - [" + *pFni->lpszFile + "]")
-        Else
-            *lpszTitle = (*lpszAppName + " - [" + *pFni->lpszFileTitle + "]")
-        End If
-    Else
-        *lpszTitle = *lpszAppName
-    End If
-    
-    'If (lpszFile = NULL) Then
-    '    *lpszTitle = (*lpszAppName)
+    'If (pFni) Then
+    '    If (pCfg->ShowFullPath) Then
+    '        *lpszTitle = (*lpszAppName + " - [" + *pFni->lpszFile + "]")
+    '    Else
+    '        *lpszTitle = (*lpszAppName + " - [" + *pFni->lpszFileTitle + "]")
+    '    End If
     'Else
-    '    *lpszTitle = (*lpszAppName 
+    '    *lpszTitle = *lpszAppName
     'End If
-    
-    '*lpszTitle = (*lpszAppname + " - [" + lpszFile + "]")
-    '#If __FB_DEBUG__
-    '    ? !"lpszTitle\t= 0x"; Hex(lpszTitle, 8)
-    '    ? !"*lpszTitle\t= "; *lpszTitle
-    '#EndIf
+    *lpszTitle = (*lpszAppName + " - [" + *lpszFile + "]")
+    #If __FB_DEBUG__
+        ? !"*lpszTitle\t= "; *lpszTitle
+    #EndIf
     
     ''update the window title
     If (SetWindowText(hDlg, Cast(LPCTSTR, lpszTitle)) = FALSE) Then Return(FALSE)
@@ -559,8 +568,9 @@ Private Function SetNewMainWndTitle (ByVal hHeap As HANDLE, ByVal hInst As HINST
     If (HeapFree(hHeap, NULL, Cast(LPVOID, lpszAppName)) = FALSE) Then Return(FALSE)
     If (HeapFree(hHeap, NULL, Cast(LPVOID, lpszTitle)) = FALSE) Then Return(FALSE)
     
-    ''unlock the heap
+    ''unlock & destroy the heap
     If (HeapUnlock(hHeap) = FALSE) Then Return(FALSE)
+    If (HeapDestroy(hHeap) = FALSE) Then Return(FALSE)
     
     ''return
     SetLastError(ERROR_SUCCESS)

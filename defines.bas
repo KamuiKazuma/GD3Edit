@@ -80,4 +80,6 @@
 #Define FNI_CBFILE              Cast(SIZE_T, (FNI_CCHFILE * SizeOf(TCHAR)))
 #Define FNI_CFILE               2
 
+#Define CB_VGMHEAD              256
+
 ''EOF
