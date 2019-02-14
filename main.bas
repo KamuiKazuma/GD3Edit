@@ -321,7 +321,7 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
                             If (hFile = INVALID_HANDLE_VALUE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
                             
                             ''read from file
-                            Dim szVGM As ZString*6
+                            Dim szVGM As ZString*4
                             Dim dwRead As DWORD32
                             If (ReadFile(hFile, Cast(LPVOID, @szVGM), SizeOf(szVGM), @dwRead, NULL) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
                             ? !"szVGM\t= "; szVGM
@@ -435,16 +435,11 @@ Private Function BrowseForFile (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, By
     If (HeapLock(hOfn) = FALSE) Then Return(FALSE)
     
     ''allocate file filter
-    Dim lpszFilt As LPTSTR = Cast(LPTSTR, HeapAlloc(hOfn, HEAP_ZERO_MEMORY, (MAX_PATH * SizeOf(TCHAR))))
+    Dim lpszFilt As LPTSTR = Cast(LPTSTR, HeapAlloc(hOfn, HEAP_ZERO_MEMORY, CB_FILTER))
     If (lpszFilt = NULL) Then Return(FALSE)
     
     ''load the file filter
-    If (LoadString(hInst, IDS_FILTER, lpszFilt, MAX_PATH) = 0) Then Return(FALSE)
-    
-    ''allocate the file names
-    Dim plpszFile As LPTSTR Ptr
-    SetLastError(HeapAllocPtrList(hOfn, Cast(LPVOID Ptr, plpszFile), (MAX_PATH * SizeOf(TCHAR)), 2))
-    If (GetLastError()) Then Return(FALSE)
+    If (LoadString(hInst, IDS_FILTER, lpszFilt, CCH_FILTER) = 0) Then Return(FALSE)
     
     ''allocate ofn
     Dim lpOfn As LPOPENFILENAME = Cast(LPOPENFILENAME, HeapAlloc(hOfn, HEAP_ZERO_MEMORY, SizeOf(OPENFILENAME)))
@@ -475,8 +470,6 @@ Private Function BrowseForFile (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, By
     
     ''free memory
     If (HeapFree(hOfn, NULL, Cast(LPVOID, lpOfn)) = FALSE) Then Return(FALSE)
-    SetLastError(HeapFreePtrList(hOfn, Cast(LPVOID Ptr, plpszFile), (MAX_PATH * SizeOf(TCHAR)), 2))
-    If (GetLastError()) Then Return(FALSE)
     If (HeapFree(hOfn, NULL, Cast(LPVOID, lpszFilt)) = FALSE) Then Return(FALSE)
     
     ''unlock the heap
@@ -546,16 +539,6 @@ Private Function SetMainWndTitle (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, 
         ? !"lpszTitle\t= 0x"; Hex(lpszTitle, 8)
     #EndIf
     
-    ''format new title string
-    'If (pFni) Then
-    '    If (pCfg->ShowFullPath) Then
-    '        *lpszTitle = (*lpszAppName + " - [" + *pFni->lpszFile + "]")
-    '    Else
-    '        *lpszTitle = (*lpszAppName + " - [" + *pFni->lpszFileTitle + "]")
-    '    End If
-    'Else
-    '    *lpszTitle = *lpszAppName
-    'End If
     *lpszTitle = (*lpszAppName + " - [" + *lpszFile + "]")
     #If __FB_DEBUG__
         ? !"*lpszTitle\t= "; *lpszTitle
