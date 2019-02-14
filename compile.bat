@@ -6,15 +6,14 @@ REM 1 = Source file not found
 REM 2 = Output file not found
 REM 3 = Compile Script not found
 
-IF EXIST ".\compile-module.bat" (
-	CALL ".\compile-module.bat" ".\Mod\CreateToolTip\CreateToolTip.bas" ".\libCreateToolTip.a"
-	CALL ".\compile-module.bat" ".\Mod\ErrMsgBox\ErrMsgBox.bas" ".\libErrMsgBox.a"
-	CALL ".\compile-module.bat" ".\Mod\HeapPtrList\HeapPtrList.bas" ".\libHeapPtrList.a"
-	CALL ".\compile-module.bat" ".\Mod\OpenProgHKey\OpenProgHKey.bas" ".\libOpenProgHKey.a"
+REM Compile static libraries
+IF EXIST ".\combile-libs.bat" (
+	CALL ".\combile-libs.bat"
 ) ELSE (
 	SET ERRORLEVEL=3
 	GOTO ERR
 )
+
 
 REM Compile resource file
 IF EXIST ".\resource.rc" (
@@ -35,7 +34,14 @@ IF EXIST ".\main.bas" (
 	) ELSE (
 		fbc -s gui ".\main.bas" ".\resource.res" -x ".\GD3Edit.exe"
 	)
-	IF NOT EXIST ".\GD3Edit.exe" (
+	IF EXIST ".\GD3Edit.exe" (
+		IF EXIST ".\clean-up.bat" (
+			CALL ".\clean-up.bat"
+		) ELSE (
+			SET ERRORLEVEL=3
+			GOTO ERR
+		)
+	) ELSE (
 		SET ERRORLEVEL=2
 		GOTO ERR
 	)
