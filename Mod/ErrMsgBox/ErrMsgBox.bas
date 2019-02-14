@@ -25,9 +25,26 @@ Public Function SysErrMsgBox (ByVal hDlg As HWND, ByVal dwErrorId As DWORD32) As
     ''make sure we have an error to display
     If (dwErrorId = ERROR_SUCCESS) Then Return(ERROR_SUCCESS)
     
-    ''format error message from error code
-    Dim lpszError As LPTSTR ''error message buffer
-    If (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER Or FORMAT_MESSAGE_FROM_SYSTEM, NULL, dwErrorId, LANG_USER_DEFAULT, Cast(LPTSTR, @lpszError), CCH_ERRMSG, NULL) = 0) Then Return(GetLastError())
+    ''get error message string
+    Dim lpszErrMsg As LPTSTR ''error message buffer returned by FormatMessage
+    Dim cchErrMsg As ULONG32 = FormatMessage((FORMAT_MESSAGE_ALLOCATE_BUFFER Or FORMAT_MESSAGE_FROM_SYSTEM), NULL, dwErrorId, LANG_USER_DEFAULT, Cast(LPTSTR, @lpszErrMsg), CCH_ERRMSG, NULL)
+    If (cchErrMsg = 0) Then Return(GetLastError())
+    
+    'Dim cchFormatted As ULONG32 = (cchError + CCH_ERRID)
+    
+    ''get error ID string
+    Dim lpszErrId As LPTSTR = Cast(LPTSTR, LocalAlloc(LPTR, Cast(SIZE_T, (CCH_ERRID * SizeOf(TCHAR)))))
+    If (lpszErrId = NULL) Then Return(GetLastError())
+    *lpszErrId = (" - (0x" + Hex(dwErrorId, 8) + ")")
+    
+    ''format message box text
+    Dim lpszFormatted As LPTSTR = Cast(LPTSTR, LocalAlloc(LPTR, Cast(SIZE_T, ((cchErrMsg + CCH_ERRID) * SizeOf(TCHAR)))))
+    If (lpszFormatted = NULL) Then Return(GetLastError())
+    *lpszFormatted = (*lpszErrMsg + *lpszErrId)
+    
+    ''free memory used for error message and ID strings
+    If (LocalFree(Cast(HLOCAL, lpszErrMsg)) = NULL) Then Return(GetLastError())
+    If (LocalFree(Cast(HLOCAL, lpszErrId)) = NULL) Then Return(GetLastError())
     
     ''allocate space for message box parameters
     Dim lpMbp As LPMSGBOXPARAMS = Cast(LPMSGBOXPARAMS, LocalAlloc(LPTR, Cast(SIZE_T, SizeOf(MSGBOXPARAMS))))
@@ -37,7 +54,7 @@ Public Function SysErrMsgBox (ByVal hDlg As HWND, ByVal dwErrorId As DWORD32) As
     With *lpMbp
         .cbSize             = SizeOf(MSGBOXPARAMS)
         .hwndOwner          = hDlg
-        .lpszText           = lpszError
+        .lpszText           = Cast(LPCTSTR, lpszFormatted)
         .dwStyle            = MB_ICONERROR
         .dwLanguageId       = LANG_USER_DEFAULT
     End With
@@ -50,7 +67,7 @@ Public Function SysErrMsgBox (ByVal hDlg As HWND, ByVal dwErrorId As DWORD32) As
     
     ''free memory allocated for message box parameters and 
     If (LocalFree(Cast(HLOCAL, lpMbp)) = NULL) Then Return(GetLastError())
-    If (LocalFree(Cast(HLOCAL, lpszError)) = NULL) Then Return(GetLastError())
+    If (LocalFree(Cast(HLOCAL, lpszFormatted)) = NULL) Then Return(GetLastError())
     
     ''return
     Return(ERROR_SUCCESS)

@@ -34,7 +34,8 @@
     #Error "This file must be compiled for Windows."
 #EndIf
 
-#Define CCH_ERRMSG 512
+#Define CCH_ERRMSG  512
+#Define CCH_ERRID   16
 
 ''include windows header
 #Include Once "windows.bi"
