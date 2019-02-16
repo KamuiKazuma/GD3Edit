@@ -59,68 +59,44 @@ Function WinMain (ByVal hInst As HINSTANCE, ByVal hInstPrev As HINSTANCE, ByVal 
         ? !"nShowCmd\t= 0x"; hex(nShowCmd, 8)
     #EndIf
     
-    If (InitClasses(hInst) = FALSE) Then Return(GetLastError())
-    
-    ''create a heap for the config
-    hCfg = HeapCreate(NULL, SizeOf(CONFIG), NULL)
-    If (hCfg = INVALID_HANDLE_VALUE) Then Return(GetLastError())
-    #If __FB_DEBUG__
-        ? !"hCfg\t= 0x"; Hex(hCfg, 8)
-    #EndIf
-    
-    ''allocate config structure
-    pCfg = Cast(CONFIG Ptr, HeapAlloc(hCfg, HEAP_ZERO_MEMORY, Cast(SIZE_T, SizeOf(CONFIG))))
-    If (pCfg = NULL) Then Return(GetLastError())
-    #If __FB_DEBUG__
-        ? !"pCfg\t= 0x"; Hex(pCfg, 8)
-    #EndIf
-    
-    'With *pCfg
-    '    .ShowFullPath = FALSE
-    '    .lpszCustFilt = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, CB_CUSTFILT))
-    '    If (.lpszCustFilt = NULL) Then Return(Cast(LRESULT, GetLastError()))
-    '    #If __FB_DEBUG__
-    '        ? !"lpszCustFilt\t= 0x"; Hex(.lpszCustFilt, 8)
-    '    #EndIf
-    'End With
-    
-    'If (LoadConfig(hCfg, hInst, pCfg, CFG_ALL) = FALSE) Then Return(GetLastError())
+    If Not(InitClasses(hInst)) Then Return(GetLastError())
     
     ''start the main dialog
-    If (StartMainDlg(hInst, nShowCmd, NULL) = FALSE) Then Return(GetLastError())
+    If Not(StartMainDlg(hInst, nShowCmd, NULL)) Then Return(GetLastError())
     
     ''start message loop
     Dim msg As MSG
-    While (GetMessage(@msg, hWin, 0, 0) = TRUE)
+    While (GetMessage(@msg, hWin, 0, 0))
         
         ''make sure msg is a valid dialog message
-        If (IsDialogMessage(hWin, @msg) = FALSE) Then
+        If Not(IsDialogMessage(hWin, @msg)) Then
             TranslateMessage(@msg)  ''translate msg into a dialog message
             DispatchMessage(@msg)   ''dispatch msg to system
         End If
         
     Wend
     
-    ''free config structure
-    If (HeapFree(hCfg, NULL, Cast(LPVOID, pCfg)) = FALSE) Then Return(GetLastError())
-    
-    ''destroy the config heap
-    If (HeapDestroy(hCfg) = FALSE) Then Return(GetLastError())
-    
     ''unregister MainClass
-    If (UnregisterClass(Cast(LPCTSTR, @MainClass), hInst) = FALSE) Then Return(GetLastError())
+    If Not(UnregisterClass(Cast(LPCTSTR, @MainClass), hInst)) Then Return(GetLastError())
     
     ''return exit code
     Return(msg.wParam)
     
 End Function
 
-Function InitClasses (ByVal hInst As HINSTANCE) As BOOL
+''initializes classes
+Private Function InitClasses (ByVal hInst As HINSTANCE) As BOOL
     
     #If __FB_DEBUG__
         ? "Calling:", __FUNCTION__
         ? !"hInst\t= 0x"; Hex(hInst, 8)
     #EndIf
+    
+    ''make sure hInst is a valid handle
+    If (hInst = INVALID_HANDLE_VALUE) Then
+        SetLastError(ERROR_INVALID_HANDLE)
+        Return(FALSE)
+    End If
     
     ''setup main class
     Dim wcxMain As WNDCLASSEX
@@ -141,104 +117,7 @@ Function InitClasses (ByVal hInst As HINSTANCE) As BOOL
     End With
     
     ''register main class
-    If (RegisterClassEx(@wcxMain) = FALSE) Then Return(FALSE)
-    
-    ''return
-    SetLastError(ERROR_SUCCESS)
-    Return(TRUE)
-    
-End Function
-
-Function LoadConfig (ByVal hHeap As HANDLE, ByVal hInst As HINSTANCE, ByVal pConfig As CONFIG Ptr, ByVal dwItems As DWORD32) As BOOL
-    
-    #If __FB_DEBUG__
-        ? "Calling:", __FUNCTION__
-        ? !"hHeap\t= 0x"; Hex(hHeap, 8)
-        ? !"pConfig\t= 0x"; Hex(pConfig, 8)
-        ? !"dwItems\t= 0x"; Hex(dwItems, 8)
-    #EndIf
-    
-    ''get a lock on the heap, by doing this, we also verify the heap's existence
-    If (HeapLock(hHeap) = FALSE) Then Return(FALSE)
-    
-    ''make sure a null (uninitialized) pointer was passed
-    If (pConfig) Then
-        SetLastError(ERROR_INVALID_PARAMETER)
-        Return(FALSE)
-    End If
-    
-    ''allocate config structure
-    pConfig = Cast(CONFIG Ptr, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, Cast(SIZE_T, SizeOf(CONFIG))))
-    If (pConfig = NULL) Then Return(FALSE)
-    #If __FB_DEBUG__
-        ? !"pConfig\t= 0x"; Hex(pConfig, 8)
-    #EndIf
-    
-    ''allocate config structure's items
-    With *pConfig
-        .lpszCustFilt = Cast(LPTSTR, HeapAlloc(hHeap,  HEAP_ZERO_MEMORY, CB_CUSTFILT))
-        #If __FB_DEBUG__
-            ? !"pConfig->lpszCustFilt\t= 0x"; Hex(.lpszCustFilt, 8)
-        #EndIf
-    End With
-    
-    ''allocate memory for app name
-    Dim lpszAppName As LPTSTR = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, CB_APPNAME))
-    If (lpszAppName = NULL) Then Return(FALSE)
-    #If __FB_DEBUG__
-        ? !"lpszAppName\t= 0x"; Hex(lpszAppName, 8)
-    #EndIf
-    
-    ''load app name
-    If (LoadString(hInst, IDS_APPNAME, lpszAppName, CCH_APPNAME) = 0) Then Return(FALSE)
-    #If __FB_DEBUG__
-        ? !"*lpszAppName\t= "; *lpszAppName
-    #EndIf
-    
-    ''open/create registry key
-    Dim hProgKey As HKEY
-    Dim dwDisp As DWORD32
-    SetLastError(Cast(DWORD32, OpenProgHKey(@hProgKey, Cast(LPCTSTR, lpszAppName), NULL, KEY_ALL_ACCESS, @dwDisp)))
-    If (GetLastError()) Then Return(FALSE)
-    
-    ''free memory used for app name
-    If (HeapFree(hHeap, NULL, Cast(LPVOID, lpszAppName)) = FALSE) Then Return(FALSE)
-    
-    ''load config
-    If (dwDisp = REG_OPENED_EXISTING_KEY) Then
-        
-        ''allocate memory for key value names
-        Dim plpszValue As LPTSTR Ptr
-        SetLastError(Cast(DWORD32, HeapAllocPtrList(hHeap, Cast(LPVOID Ptr, plpszValue), CB_REGVAL, C_REGVAL)))
-        If (GetLastError()) Then Return(FALSE)
-        
-        ''load registry key value names
-        SetLastError(Cast(DWORD32, LoadStringRange(hInst, plpszValue, IDS_REG_SHOWFULLPATH, CCH_REGVAL, C_REGVAL)))
-        If (GetLastError()) Then Return(FALSE)
-        
-        Dim dwType As DWORD32
-        Dim cbSize As DWORD32
-        
-        cbSize = SizeOf(BOOL)
-        SetLastError(Cast(DWORD32, RegQueryValueEx(hProgKey, Cast(LPCTSTR, plpszValue[REGVAL_SHOWFULLPATH]), NULL, @dwType, Cast(LPBYTE, @pConfig->ShowFullPath), @cbSize)))
-        If (GetLastError()) Then Return(FALSE)
-        
-        cbSize = CB_CUSTFILT
-        SetLastError(Cast(DWORD32, RegQueryValueEx(hProgKey, Cast(LPCTSTR, plpszValue[REGVAL_CUSTFILT]), NULL, @dwType, Cast(LPBYTE, @pConfig->lpszCustFilt), @cbSize)))
-        If (GetLastError()) Then Return(FALSE)
-        
-        ''free memory used for key value names
-        SetLastError(Cast(DWORD32, HeapFreePtrList(hHeap, Cast(LPVOID Ptr, plpszValue), CB_REGVAL, C_REGVAL)))
-        If (GetLastError()) Then Return(FALSE)
-        
-    End If
-    
-    ''close registry key
-    SetLastError(Cast(DWORD32, RegCloseKey(hProgKey)))
-    If (GetLastError()) Then Return(FALSE)
-    
-    ''release the lock on the heap
-    If (HeapUnlock(hHeap) = FALSE) Then Return(FALSE)
+    If Not(RegisterClassEx(@wcxMain)) Then Return(FALSE)
     
     ''return
     SetLastError(ERROR_SUCCESS)
@@ -281,7 +160,7 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
             ''set program's icon
             SendMessage(hWnd, WM_SETICON, NULL, Cast(LPARAM, LoadIcon(hInstance, MAKEINTRESOURCE(IDI_KAZUSOFT))))
             
-            If (CreateWindowEx(NULL, STATUSCLASSNAME, NULL, WS_CHILD Or WS_VISIBLE, 0, 0, 0, 0, hWnd, Cast(HMENU, IDC_SBR_MAIN), hInstance, NULL) = INVALID_HANDLE_VALUE) Then SysErrMsgBox(hWnd, GetLastError())
+            If (CreateWindowEx(NULL, STATUSCLASSNAME, NULL, (WS_CHILD Or WS_VISIBLE), 0, 0, 0, 0, hWnd, Cast(HMENU, IDC_SBR_MAIN), hInstance, NULL) = INVALID_HANDLE_VALUE) Then SysErrMsgBox(hWnd, GetLastError())
             
         Case WM_DESTROY     ''destroy the dialog
             
@@ -293,7 +172,7 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
         Case WM_CLOSE       ''dialog's close button is pressed
             
             ''destroy main window
-            DestroyWindow(hWnd)
+            If Not(DestroyWindow(hWnd)) Then SysErrMsgBox(hWnd, GetLastError())
             
         Case WM_COMMAND     ''command
             Select Case HiWord(wParam)  ''command code
@@ -311,10 +190,10 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
                             If (GetLastError()) Then Return(SysErrMsgBox(hWnd, GetLastError()))
                             
                             ''open browse dialog box
-                            If (BrowseForFile(hInstance, hWnd, @fni) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
+                            If Not(BrowseForFile(hInstance, hWnd, @fni)) Then Return(SysErrMsgBox(hWnd, GetLastError()))
                             
                             ''update title bar
-                            If (SetMainWndTitle(hInstance, hWnd, Cast(LPCTSTR, fni.lpszFileTitle)) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
+                            If Not(SetMainWndTitle(hInstance, hWnd, Cast(LPCTSTR, fni.lpszFileTitle))) Then Return(SysErrMsgBox(hWnd, GetLastError()))
                             
                             ''open file
                             Dim hFile As HANDLE = CreateFile(Cast(LPCTSTR, fni.lpszFile), GENERIC_READ, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL)
@@ -323,18 +202,18 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
                             ''read from file
                             Dim szVGM As ZString*4
                             Dim dwRead As DWORD32
-                            If (ReadFile(hFile, Cast(LPVOID, @szVGM), SizeOf(szVGM), @dwRead, NULL) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
+                            If Not(ReadFile(hFile, Cast(LPVOID, @szVGM), SizeOf(szVGM), @dwRead, NULL)) Then Return(SysErrMsgBox(hWnd, GetLastError()))
                             ? !"szVGM\t= "; szVGM
                             
                             ''close file
-                            If (CloseHandle(hFile) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
+                            If Not(CloseHandle(hFile)) Then Return(SysErrMsgBox(hWnd, GetLastError()))
                             
                             ''free FNI
                             SetLastError(FreeFileNameInfo(hFni, @fni))
                             If (GetLastError()) Then Return(SysErrMsgBox(hWnd, GetLastError()))
                             
                             ''destroy the local heap
-                            If (HeapDestroy(hFni) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
+                            If Not(HeapDestroy(hFni)) Then Return(SysErrMsgBox(hWnd, GetLastError()))
                             
                         Case IDM_SAVE           ''menu/file/save
                             
@@ -346,7 +225,7 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
                             
                         Case IDM_ABOUT          ''menu/about
                             
-                            If (AboutMsgBox(hInstance, hWnd) = FALSE) Then SysErrMsgBox(hWnd, GetLastError())
+                            If Not(AboutMsgBox(hInstance, hWnd)) Then SysErrMsgBox(hWnd, GetLastError())
                             
                     End Select
                     
@@ -362,13 +241,13 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
                 .right  = LoWord(lParam)
                 .bottom = HiWord(lParam)
             End With
-            If (GetClientRect(GetDlgItem(hWnd, IDC_SBR_MAIN), @rcSbr) = FALSE) Then
+            If Not(GetClientRect(GetDlgItem(hWnd, IDC_SBR_MAIN), @rcSbr)) Then
                 SysErrMsgBox(hWnd, GetLastError())
                 Exit Select
             End If
             rcParent.bottom -= rcSbr.bottom
             
-            If (EnumChildWindows(hWnd, @ResizeMainChildren, Cast(LPARAM, @rcParent)) = FALSE) Then SysErrMsgBox(hWnd, GetLastError())
+            If Not(EnumChildWindows(hWnd, @ResizeMainChildren, Cast(LPARAM, @rcParent))) Then SysErrMsgBox(hWnd, GetLastError())
             
             Return(Cast(LRESULT, TRUE))
             
@@ -384,11 +263,12 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
     
 End Function
 
+''resizes the main dialog's child windows
 Private Function ResizeMainChildren (ByVal hWnd As HWND, ByVal lParam As LPARAM) As BOOL
     
     ''get parent rect from lParam
     Dim lprcParent As LPRECT = Cast(LPRECT, lParam)
-    If (lprcParent = NULL) Then
+    If Not(lprcParent) Then
         SetLastError(ERROR_INVALID_PARAMETER)
         Return(FALSE)
     End If
@@ -405,7 +285,7 @@ Private Function ResizeMainChildren (ByVal hWnd As HWND, ByVal lParam As LPARAM)
         End Select
         
         ''resize the child window
-        If (MoveWindow(hWnd, .left, .top, .right, .bottom, TRUE) = FALSE) Then Return(FALSE)
+        If Not(MoveWindow(hWnd, .left, .top, .right, .bottom, TRUE)) Then Return(FALSE)
         
     End With
     
@@ -414,6 +294,7 @@ Private Function ResizeMainChildren (ByVal hWnd As HWND, ByVal lParam As LPARAM)
     
 End Function
 
+''starts the open dialog to browse for a file
 Private Function BrowseForFile (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, ByVal pFni As FILENAMEINFO Ptr) As BOOL
     
     #If __FB_DEBUG__
@@ -428,22 +309,34 @@ Private Function BrowseForFile (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, By
     If (hCurPrev = INVALID_HANDLE_VALUE) Then Return(FALSE)
     
     ''create a local heap
-    Dim hOfn As HANDLE = HeapCreate(NULL, SizeOf(OPENFILENAME), NULL)
-    If (hOfn = INVALID_HANDLE_VALUE) Then Return(FALSE)
+    Dim hHeap As HANDLE = HeapCreate(NULL, SizeOf(OPENFILENAME), NULL)
+    If (hHeap = INVALID_HANDLE_VALUE) Then Return(FALSE)
+    #If __FB_DEBUG__
+        ? !"hHeap\t= 0x"; Hex(hheap)
+    #EndIf
     
     ''lock the local heap
-    If (HeapLock(hOfn) = FALSE) Then Return(FALSE)
+    If Not(HeapLock(hHeap)) Then Return(FALSE)
     
     ''allocate file filter
-    Dim lpszFilt As LPTSTR = Cast(LPTSTR, HeapAlloc(hOfn, HEAP_ZERO_MEMORY, CB_FILTER))
-    If (lpszFilt = NULL) Then Return(FALSE)
+    Dim lpszFilt As LPTSTR = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, CB_FILTER))
+    If Not(lpszFilt) Then Return(FALSE)
+    #If __FB_DEBUG__
+        ? !"lpszFilt\t= 0x"; Hex(lpszFilt)
+    #EndIf
     
     ''load the file filter
     If (LoadString(hInst, IDS_FILTER, lpszFilt, CCH_FILTER) = 0) Then Return(FALSE)
+    #If __FB_DEBUG__
+        ? !"*lpszFilt\t= "; *lpszFilt
+    #EndIf
     
     ''allocate ofn
-    Dim lpOfn As LPOPENFILENAME = Cast(LPOPENFILENAME, HeapAlloc(hOfn, HEAP_ZERO_MEMORY, SizeOf(OPENFILENAME)))
-    If (lpOfn = NULL) Then Return(FALSE)
+    Dim lpOfn As LPOPENFILENAME = Cast(LPOPENFILENAME, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, SizeOf(OPENFILENAME)))
+    If Not(lpOfn) Then Return(FALSE)
+    #If __FB_DEBUG__
+        ? !"lpOfn\t= 0x"; Hex(lpOfn)
+    #EndIf
     
     ''setup ofn
     With *lpOfn
@@ -469,14 +362,14 @@ Private Function BrowseForFile (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, By
     GetOpenFileName(lpOfn)
     
     ''free memory
-    If (HeapFree(hOfn, NULL, Cast(LPVOID, lpOfn)) = FALSE) Then Return(FALSE)
-    If (HeapFree(hOfn, NULL, Cast(LPVOID, lpszFilt)) = FALSE) Then Return(FALSE)
+    If Not(HeapFree(hHeap, NULL, Cast(LPVOID, lpOfn))) Then Return(FALSE)
+    If Not(HeapFree(hHeap, NULL, Cast(LPVOID, lpszFilt))) Then Return(FALSE)
     
     ''unlock the heap
-    If (HeapUnlock(hOfn) = FALSE) Then Return(FALSE)
+    If Not(HeapUnlock(hHeap)) Then Return(FALSE)
     
     ''destroy the local heap
-    If (HeapDestroy(hOfn) = FALSE) Then Return(FALSE)
+    If Not(HeapDestroy(hHeap)) Then Return(FALSE)
     
     ''restore old cursor
     SetCursor(hCurPrev)
@@ -487,6 +380,7 @@ Private Function BrowseForFile (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, By
     
 End Function
 
+''updates the main dialog's title bar
 Private Function SetMainWndTitle (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, ByVal lpszFile As LPCTSTR) As BOOL
     
     #If __FB_DEBUG__
@@ -500,13 +394,16 @@ Private Function SetMainWndTitle (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, 
     ''create a local heap
     Dim hHeap As HANDLE = HeapCreate(NULL, CB_APPNAME, NULL)
     If (hHeap = INVALID_HANDLE_VALUE) Then Return(FALSE)
+    #If __FB_DEBUG__
+        ? !"hHeap\t= 0x"; Hex(hHeap)
+    #EndIf
     
     ''get a lock on the heap
-    If (HeapLock(hHeap) = FALSE) Then Return(FALSE)
+    If Not(HeapLock(hHeap)) Then Return(FALSE)
     
     ''allocate space for app name
     Dim lpszAppName As LPTSTR = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, CB_APPNAME))
-    If (lpszAppName = NULL) Then Return(FALSE)
+    If Not(lpszAppName) Then Return(FALSE)
     #If __FB_DEBUG__
         ? !"lpszAppName\t= 0x"; Hex(lpszAppName, 8)
     #EndIf
@@ -516,25 +413,21 @@ Private Function SetMainWndTitle (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, 
     #If __FB_DEBUG__
         ? !"*lpszAppName\t= "; *lpszAppName
     #EndIf
-    
-    '''calculate # of TCHARs to allocate
-    'Dim cchTitle As ULONG32
-    'If (pFni) Then
-    '    If (pCfg->ShowFullPath) Then
-    '        cchTitle = (CCH_APPNAME + MAX_PATH + 5)
-    '    Else
-    '        cchTitle = (CCH_APPNAME + MAX_PATH + 5)
-    '    End If
-    'Else
-    '    cchTitle = CCH_APPNAME
-    'End If
-    '#If __FB_DEBUG__
-    '    ? !"cchTitle\t= "; cchTitle
-    '#EndIf
+        
+    ''calculate number of chars to allocate
+    Dim cchTitle As ULONG32
+    If (lpszFile) Then
+        cchTitle = (CCH_APPNAME + MAX_PATH + 5)
+    Else
+        cchTitle = (CCH_APPNAME)
+    End If
+    #If __FB_DEBUG__
+        ? !"cchTitle\t= "; cchTitle
+    #EndIf
     
     ''allocate space for new window title
-    Dim lpszTitle As LPTSTR = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, Cast(SIZE_T, (MAX_PATH * SizeOf(TCHAR)))))
-    If (lpszTitle = NULL) Then Return(FALSE)
+    Dim lpszTitle As LPTSTR = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, Cast(SIZE_T, (cchTitle * SizeOf(TCHAR)))))
+    If Not(lpszTitle) Then Return(FALSE)
     #If __FB_DEBUG__
         ? !"lpszTitle\t= 0x"; Hex(lpszTitle, 8)
     #EndIf
@@ -545,15 +438,15 @@ Private Function SetMainWndTitle (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, 
     #EndIf
     
     ''update the window title
-    If (SetWindowText(hDlg, Cast(LPCTSTR, lpszTitle)) = FALSE) Then Return(FALSE)
+    If Not(SetWindowText(hDlg, Cast(LPCTSTR, lpszTitle))) Then Return(FALSE)
     
     ''free allocated memory
-    If (HeapFree(hHeap, NULL, Cast(LPVOID, lpszAppName)) = FALSE) Then Return(FALSE)
-    If (HeapFree(hHeap, NULL, Cast(LPVOID, lpszTitle)) = FALSE) Then Return(FALSE)
+    If Not(HeapFree(hHeap, NULL, Cast(LPVOID, lpszAppName))) Then Return(FALSE)
+    If Not(HeapFree(hHeap, NULL, Cast(LPVOID, lpszTitle))) Then Return(FALSE)
     
     ''unlock & destroy the heap
-    If (HeapUnlock(hHeap) = FALSE) Then Return(FALSE)
-    If (HeapDestroy(hHeap) = FALSE) Then Return(FALSE)
+    If Not(HeapUnlock(hHeap)) Then Return(FALSE)
+    If Not(HeapDestroy(hHeap)) Then Return(FALSE)
     
     ''return
     SetLastError(ERROR_SUCCESS)
@@ -574,15 +467,15 @@ Private Function AboutMsgBox (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As B
     Dim hCursorPrev As HCURSOR = SetCursor(LoadCursor(NULL, IDC_WAIT))
     
     ''create a local heap
-    Dim hAmb As HANDLE = HeapCreate(NULL, NULL, NULL)
-    If (hAmb = INVALID_HANDLE_VALUE) Then Return(FALSE)
+    Dim hHeap As HANDLE = HeapCreate(NULL, NULL, NULL)
+    If (hHeap = INVALID_HANDLE_VALUE) Then Return(FALSE)
     
     ''get a lock on the heap
-    If (HeapLock(hAmb) = FALSE) Then Return(FALSE)
+    If Not(HeapLock(hHeap)) Then Return(FALSE)
     
     ''allocate space for the unformatted strings
     Dim plpszUnformatted As LPTSTR Ptr
-    SetLastError(Cast(DWORD32, HeapAllocPtrList(hAmb, Cast(LPVOID Ptr, plpszUnformatted), CB_ABT, C_ABT)))
+    SetLastError(Cast(DWORD32, HeapAllocPtrList(hHeap, Cast(LPVOID Ptr, plpszUnformatted), CB_ABT, C_ABT)))
     If (GetLastError()) Then Return(FALSE)
     
     ''load unformatted strings
@@ -590,8 +483,8 @@ Private Function AboutMsgBox (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As B
     If (GetLastError()) Then Return(FALSE)
     
     ''allocate space for the formatted string
-    Dim lpszFormatted As LPTSTR = Cast(LPTSTR, HeapAlloc(hAmb, HEAP_ZERO_MEMORY, Cast(SIZE_T, (C_ABT * CB_ABT))))
-    If (lpszFormatted = NULL) Then Return(FALSE)
+    Dim lpszFormatted As LPTSTR = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, Cast(SIZE_T, (C_ABT * CB_ABT))))
+    If Not(lpszFormatted) Then Return(FALSE)
     
     ''format string
     #Ifdef __FB_64BIT__
@@ -601,8 +494,8 @@ Private Function AboutMsgBox (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As B
     #EndIf
     
     ''allocate space for message box parameters
-    Dim lpMbp As LPMSGBOXPARAMS = Cast(LPMSGBOXPARAMS, HeapAlloc(hAmb, HEAP_ZERO_MEMORY, Cast(SIZE_T, SizeOf(MSGBOXPARAMS))))
-    If (lpMbp = NULL) Then Return(FALSE)
+    Dim lpMbp As LPMSGBOXPARAMS = Cast(LPMSGBOXPARAMS, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, Cast(SIZE_T, SizeOf(MSGBOXPARAMS))))
+    If Not(lpMbp) Then Return(FALSE)
     
     ''set up message box parameters
     With *lpMbp
@@ -620,20 +513,20 @@ Private Function AboutMsgBox (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As B
     hCursorPrev = SetCursor(hCursorPrev)
     
     ''display message box
-    If (MessageBoxIndirect(lpMbp) = 0) Then Return(FALSE)
+    If (MessageBoxIndirect(lpMbp) <> IDOK) Then Return(FALSE)
     
     ''set loading cursor
     hCursorPrev = SetCursor(hCursorPrev)
     
     ''free memory
-    If (HeapFree(hAmb, NULL, Cast(LPVOID, lpMbp)) = FALSE) Then Return(FALSE)
-    If (HeapFree(hAmb, NULL, Cast(LPVOID, lpszFormatted)) = FALSE) Then Return(FALSE)
-    SetLastError(Cast(DWORD32, HeapFreePtrList(hAmb, Cast(LPVOID Ptr, plpszUnformatted), CB_ABT, C_ABT)))
+    If Not(HeapFree(hHeap, NULL, Cast(LPVOID, lpMbp))) Then Return(FALSE)
+    If Not(HeapFree(hHeap, NULL, Cast(LPVOID, lpszFormatted))) Then Return(FALSE)
+    SetLastError(Cast(DWORD32, HeapFreePtrList(hHeap, Cast(LPVOID Ptr, plpszUnformatted), CB_ABT, C_ABT)))
     If (GetLastError()) Then Return(FALSE)
     
     ''unlock & destroy the local heap
-    If (HeapUnlock(hAmb) = FALSE) Then Return(FALSE)
-    If (HeapDestroy(hAmb) = FALSE) Then Return(FALSE)
+    If Not(HeapUnlock(hHeap)) Then Return(FALSE)
+    If Not(HeapDestroy(hHeap)) Then Return(FALSE)
     
     ''restore previous cursor
     SetCursor(hCursorPrev)
