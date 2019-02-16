@@ -1,3 +1,13 @@
+/'
+    
+    filenameinfo.bas
+    
+    FileNameInfo Module
+    
+    Compile with:
+        fbc -c ".\Inc\filenameinfo.bas"
+    
+'/
 
 #Include "header.bi"
 
@@ -12,29 +22,19 @@ Public Function InitFileNameInfo (ByVal hHeap As HANDLE, ByVal pFni As FILENAMEI
     ''get a lock on the heap
     If (HeapLock(hHeap) = FALSE) Then Return(GetLastError())
     
-    /'
-    ''allocate file name
-    pFni->lpszFile = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, FNI_CBFILE))
-    If (pFni->lpszFile = NULL) Then Return(GetLastError())
-    
-    
-    ''allocate file title
-    pFni->lpszFileTitle = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, FNI_CBFILE))
-    If (pFni->lpszFileTitle = NULL) Then Return(GetLastError())
-    '/
-    
+    ''allocate items
     With *pFni
+        ''allocate file
         .lpszFile = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, FNI_CBFILE))
         If (.lpszFile = NULL) Then Return(GetLastError())
-        #If __FB_DEBUG__
-            ? !"lpszFile\t= 0x"; Hex(.lpszFile, 8)
-        #EndIf
         
+        ''allocate file title
         .lpszFileTitle = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, FNI_CBFILE))
-        If (pFni->lpszFileTitle = NULL) Then Return(GetLastError())
-        #If __FB_DEBUG__
-            ? !"lpszFileTitle\t= 0x"; Hex(.lpszFileTitle, 8)
-        #EndIf
+        If (.lpszFileTitle = NULL) Then Return(GetLastError())
+        
+        ''allocate file extention
+        .lpszExt = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, FNI_CBFILE))
+        If (.lpszExt = NULL) Then Return(GetLastError())
     End With
     
     ''unlock the heap
@@ -56,10 +56,11 @@ Public Function FreeFileNameInfo (ByVal hHeap As HANDLE, ByVal pFni As FILENAMEI
     ''get a lock on the heap, this also verifies its existence
     If (HeapLock(hHeap) = FALSE) Then Return(GetLastError())
     
-    ''free sub items
+    ''free items
     With *pFni
         If (HeapFree(hHeap, NULL, Cast(LPVOID, .lpszFile)) = FALSE) Then Return(GetLastError())
         If (HeapFree(hHeap, NULL, Cast(LPVOID, .lpszFileTitle)) = FALSE) Then Return(GetLastError())
+        If (HeapFree(hHeap, NULL, Cast(LPVOID, .lpszExt)) = FALSE) Then Return(GetLastError())
     End With
     
     ''unlock & destroy the heap
