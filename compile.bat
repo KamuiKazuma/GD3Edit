@@ -7,13 +7,20 @@ REM 2 = Output file not found
 REM 3 = Compile Script not found
 
 REM Compile static libraries
-IF EXIST ".\combile-libs.bat" (
-	CALL ".\combile-libs.bat"
+IF EXIST ".\compile-libs.bat" (
+	CALL ".\compile-libs.bat"
 ) ELSE (
 	SET ERRORLEVEL=3
 	GOTO ERR
 )
 
+REM Compile modules
+IF EXIST ".\compile-mods.bat" (
+	CALL ".\compile-mods.bat"
+) ELSE (
+	SET ERRORLEVEL=3
+	GOTO ERR
+)
 
 REM Compile resource file
 IF EXIST ".\resource.rc" (
@@ -30,18 +37,11 @@ IF EXIST ".\resource.rc" (
 REM Compile main module
 IF EXIST ".\main.bas" (
 	IF DEFINED FBDEBUG (
-		fbc -g ".\main.bas" ".\resource.res" -x ".\GD3Edit.exe"
+		fbc -g ".\main.bas" ".\*.o" ".\resource.res" -x ".\GD3Edit.exe"
 	) ELSE (
-		fbc -s gui ".\main.bas" ".\resource.res" -x ".\GD3Edit.exe"
+		fbc -s gui ".\main.bas" ".\*.o" ".\resource.res" -x ".\GD3Edit.exe"
 	)
-	IF EXIST ".\GD3Edit.exe" (
-		IF EXIST ".\clean-up.bat" (
-			CALL ".\clean-up.bat"
-		) ELSE (
-			SET ERRORLEVEL=3
-			GOTO ERR
-		)
-	) ELSE (
+	IF NOT EXIST ".\GD3Edit.exe" (
 		SET ERRORLEVEL=2
 		GOTO ERR
 	)
@@ -55,6 +55,6 @@ GOTO EOF
 
 :ERR
 ECHO.
-ECHO %~0 ERROR: %ERRORLEVEL%
+ECHO %~n0 ERROR: %ERRORLEVEL%
 
 :EOF
