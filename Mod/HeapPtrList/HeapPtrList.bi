@@ -12,10 +12,7 @@
 
 ''compiler output
 #Ifdef __FB_WIN32__
-    #If __FB_OUT_EXE__
-        #Print "Including ""HeapPtrList""."
-        #Inclib "heapptrlist"
-    #ElseIf __FB_OUT_LIB__
+    #If __FB_OUT_LIB__
         #Print "Compiling ""HeapPtrList""."
         #Ifdef __FB_64BIT__
             #Print "Compiling for 64-bit Windows."
@@ -28,7 +25,8 @@
             #Print "Compiling in release mode."
         #EndIf
     #Else
-        #Error "This file must be compiled as a static library."
+        #Print "Including ""HeapPtrList""."
+        #Inclib "heapptrlist"
     #EndIf
 #Else
     #Error "This file must be compiled for Windows."

@@ -8,10 +8,7 @@
 
 ''compiler output
 #Ifdef __FB_WIN32__
-    #If __FB_OUT_EXE__
-        #Print "Including ""OpenProgHKey""."
-        #Inclib "openproghkey"
-    #ElseIf __FB_OUT_LIB__
+    #If __FB_OUT_LIB__
         #Print "Compiling ""OpenProgHKey""."
         #Ifdef __FB_64BIT__
             #Print "Compiling for 64-bit Windows."
@@ -24,7 +21,8 @@
             #Print "Compiling in release mode."
         #EndIf
     #Else
-        #Error "This file must be compiled as a static library."
+        #Print "Including ""OpenProgHKey""."
+        #Inclib "openproghkey"
     #EndIf
 #Else
     #Error "This file must be compiled for Windows."

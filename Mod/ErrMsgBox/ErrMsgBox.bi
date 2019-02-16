@@ -12,10 +12,7 @@
 
 ''compiler output
 #Ifdef __FB_WIN32__
-    #If __FB_OUT_EXE__
-        #Print "Including ""ErrMsgBox""."
-        #Inclib "errmsgbox"
-    #ElseIf __FB_OUT_LIB__
+    #If __FB_OUT_LIB__
         #Print "Compiling ""ErrMsgBox""."
         #Ifdef __FB_64BIT__
             #Print "Compiling for 64-bit Windows."
@@ -28,14 +25,15 @@
             #Print "Compiling in release mode."
         #EndIf
     #Else
-        #Error "This file must be compiled as a static library."
+        #Print "Including ""ErrMsgBox""."
+        #Inclib "errmsgbox"
     #EndIf
 #Else
     #Error "This file must be compiled for Windows."
 #EndIf
 
-#Define CCH_ERRMSG  512
-#Define CCH_ERRID   16
+#Define CCH_ERRMSG  &h00000200 /'512'/
+#Define CCH_ERRID   &h00000010 /'16'/
 
 ''include windows header
 #Include Once "windows.bi"
