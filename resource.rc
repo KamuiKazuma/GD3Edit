@@ -11,11 +11,11 @@ LANGUAGE 9, 1
 
 #define IDR_MENUMAIN            0x2710 //10000
 #define IDM_FILE                0x2711 //10001
-#define IDM_NEW                 0x2712 //10002
-#define IDM_OPEN                0x2713 //10003
-#define IDM_SAVE                0x2714 //10004
-#define IDM_SAVEAS              0x2715 //10005
-#define IDM_EXIT                0x2716 //10006
+#define IDM_OPEN                0x2712 //10002
+#define IDM_SAVE                0x2713 //10003
+#define IDM_SAVEAS              0x2714 //10004
+#define IDM_EXIT                0x2715 //10005
+#define IDM_OPTIONS             0x2716 //10006
 #define IDM_ABOUT               0x2717 //10007
 
 #define IDS_APPNAME             0x0001 //1
@@ -28,11 +28,22 @@ LANGUAGE 9, 1
 #define IDS_FILTER              0x0008 //8
 #define IDS_REG_SHOWFULLPATH    0x0009 //9
 #define IDS_REG_CUSTFILT        0x000A //10
-#define IDS_CONFIRMEXIT         0x000B //11
+
+#define IDS_LVI_VGMVER          0x0100 //256
+#define IDS_LVI_LOOPBASE        0x0101 //257
+#define IDS_LVI_LOOPMOD         0x0102 //258
+#define IDS_LVI_LOOPSAMPLES     0x0103 //259
+#define IDS_LVI_TOTALSAMPLES    0x0104 //260
+#define IDS_LVI_VOLMOD          0x0105 //261
+
+#define IDS_CHD_NAME            0x0200 //512
+#define IDS_CHD_VALUE           0x0201 //513
+
+#define IDS_MSG_UNSAVED         0x0300 //768
 
 IDR_VERSIONINFO VERSIONINFO
-FILEVERSION     1, 0, 0, 40
-PRODUCTVERSION  1, 0, 0, 40
+FILEVERSION     1, 0, 0, 45
+PRODUCTVERSION  1, 0, 0, 45
 FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
 FILEFLAGS       VS_FF_DEBUG | VS_FF_PRIVATEBUILD | VS_FF_SPECIALBUILD
 FILEOS          VOS_NT_WINDOWS32
@@ -43,8 +54,8 @@ BEGIN
     BEGIN
         BLOCK "04090000"
         BEGIN
-            VALUE "FileVersion",        "1.0.0.40\0"
-            VALUE "ProductVersion",     "1.0.0.40\0"
+            VALUE "FileVersion",        "1.0.0.45\0"
+            VALUE "ProductVersion",     "1.0.0.45\0"
             VALUE "CompanyName",        "Kazusoft Co.\0"
             VALUE "LegalCopyright",     "Copyright (c) 2019 Kazusoft Co.\0"
             VALUE "LegalTrademarks",    "Kazusoft Co. and the Kazusoft logo are Trademarks of Lisa Murray\0"
@@ -52,7 +63,7 @@ BEGIN
             VALUE "InternalName",       "GD3Edit\0"
             VALUE "OriginalFilename",   "GD3Edit.exe\0"
             VALUE "ProductName",        "GD3Edit\0"
-            VALUE "PrivateBuild",       "Built by Lisa for testing.\0"
+            VALUE "PrivateBuild",       "Built by Lisa for testing listboxes\0"
             VALUE "SpecialBuild",       "Test Build\0"
         END
     END
@@ -79,13 +90,13 @@ LANGUAGE 9, 1
 BEGIN
     POPUP "&File", IDM_FILE, MFT_STRING, MFS_ENABLED
     BEGIN
-        MENUITEM "&New", IDM_NEW, MFT_STRING, MFS_DISABLED
         MENUITEM "&Open", IDM_OPEN, MFT_STRING, MFS_ENABLED
         MENUITEM "&Save", IDM_SAVE, MFT_STRING, MFS_DISABLED
         MENUITEM "Save &As", IDM_SAVEAS, MFT_STRING, MFS_DISABLED
         MENUITEM SEPARATOR
         MENUITEM "E&xit", IDM_EXIT, MFT_STRING, MFS_ENABLED
     END
+    MENUITEM "&Options", IDM_OPTIONS, MFT_STRING, MFS_DISABLED
     MENUITEM "&About", IDM_ABOUT, MFT_STRING, MFS_ENABLED
 END
 
@@ -99,10 +110,18 @@ BEGIN
     IDS_BUILDDATE           "\nBuild Date:\t"
     IDS_COMPILER            "\nCompiler Information:"
     IDS_SIGNATURE           "\nSignature:\t\t"
-    IDS_FILTER              "GD3Edit Files (*.GD3)\0*.GD3\0VGM Files (*.VGM)\0*.VGM\0All Files\0*.*\0\0"
+    IDS_FILTER              "VGM Files (*.VGM)\0*.VGM\0All Files\0*.*\0\0"
     IDS_REG_SHOWFULLPATH    "Show Full Path in Title Bar"
     IDS_REG_CUSTFILT        "Custom File Filter"
-    IDS_CONFIRMEXIT         "The current file has unsaved changes.\nAre you sure you want to exit?"
+    IDS_LVI_VGMVER          "VGM Version\0"
+    IDS_LVI_LOOPBASE        "Loop Base\0"
+    IDS_LVI_LOOPMOD         "Loop Modifier\0"
+    IDS_LVI_LOOPSAMPLES     "Loop Samples\0"
+    IDS_LVI_TOTALSAMPLES    "Total Samples\0"
+    IDS_LVI_VOLMOD          "Volume Modifier\0"
+    IDS_CHD_NAME            "Name\0"
+    IDS_CHD_VALUE           "Value\0"
+    IDS_MSG_UNSAVED         "There are unsaved changes in the current file that will be lost if you don't save them.\nWould you like to save them now?"
 END
 
 //EOF

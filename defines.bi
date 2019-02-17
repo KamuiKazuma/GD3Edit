@@ -19,15 +19,16 @@
 ''dialogs
 #Define IDD_MAIN                &h03E8
 #Define IDC_SBR_MAIN            &h03E9
+#Define IDC_LIV_MAIN            &h03E8
 
 ''menus
 #Define IDR_MENUMAIN            &h2710
 #Define IDM_FILE                &h2711
-#Define IDM_NEW                 &h2712
-#Define IDM_OPEN                &h2713
-#Define IDM_SAVE                &h2714
-#Define IDM_SAVEAS              &h2715
-#Define IDM_EXIT                &h2716
+#Define IDM_OPEN                &h2712
+#Define IDM_SAVE                &h2713
+#Define IDM_SAVEAS              &h2714
+#Define IDM_EXIT                &h2715
+#Define IDM_OPTIONS             &h2716
 #Define IDM_ABOUT               &h2717
 
 ''strings
@@ -40,8 +41,18 @@
 #Define IDS_SIGNATURE           &h0007
 #Define IDS_FILTER              &h0008
 #Define IDS_REG_SHOWFULLPATH    &h0009
-#Define IDS_REG_CUSTFILT        &h000A
-#Define IDS_CONFIRMEXIT         &h000B
+
+#Define IDS_LVI_VGMVER          &h0100
+#Define IDS_LVI_LOOPBASE        &h0101
+#Define IDS_LVI_LOOPMOD         &h0102
+#Define IDS_LVI_LOOPSAMPLES     &h0103
+#Define IDS_LVI_TOTALSAMPLES    &h0104
+#Define IDS_LVI_VOLMOD          &h0105
+
+#Define IDS_CHD_NAME            &h0200
+#Define IDS_CHD_VALUE           &h0201
+
+#Define IDS_MSG_UNSAVED         &h0300
 
 ''HeapPtrList info for about message
 #Define CCH_ABT                 &h00000100 /'256'/
@@ -73,6 +84,20 @@
 #Define REGVAL_SHOWFULLPATH     &h00000000
 #Define REGVAL_CUSTFILT         &h00000001
 
-#Define CB_VGMHEAD              &h00000100 /'256'/
+''size of listview headings
+#Define CCH_LVHD                &h00000100
+#Define CB_LVHD                 Cast(SIZE_T, (CCH_LVHD * SizeOf(TCHAR)))
+#Define C_LVHD                  &h00000002
+
+''size of listview items
+#Define CCH_LVITEM              &h00000100
+#Define CB_LVITEM               Cast(SIZE_T, (CCH_LVITEM * SizeOf(TCHAR)))
+#Define C_LVITEM                &h00000006
+#Define LVI_VGMVER              &h00000000
+#Define LVI_LOOPBASE            &h00000001
+#Define LVI_LOOPMOD             &h00000002
+#Define LVI_LOOPSAMPLES         &h00000003
+#Define LVI_TOTALSAMPLES        &h00000004
+#Define LVI_VOLMOD              &h00000005
 
 ''EOF

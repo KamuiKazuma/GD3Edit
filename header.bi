@@ -69,7 +69,14 @@ Declare Function BrowseForFile (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, By
 ''updates the main dialog's title bar
 Declare Function SetMainWndTitle (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, ByVal lpszFile As LPCTSTR) As BOOL
 
+Declare Sub FatalErrorProc (ByVal hDlg As HWND, ByVal dwErrCode As DWORD32)
+
 ''displays the about message box
 Declare Function AboutMsgBox (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As BOOL
+
+Declare Function InitMainChildren (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As BOOL
+Declare Function InitMainListView (ByVal hInst As HINSTANCE, ByVal hWnd As HWND) As BOOL
+Declare Function InitMainListViewColumns (ByVal hInst As HINSTANCE, ByVal hHeap As HANDLE, ByVal hWnd As HWND) As BOOL
+Declare Function InitMainListViewItems (ByVal hInst As HINSTANCE, ByVal hHeap As HANDLE, ByVal hWnd As HWND) As BOOL
 
 ''EOF
