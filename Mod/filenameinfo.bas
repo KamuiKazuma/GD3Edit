@@ -24,6 +24,7 @@ Public Function InitFileNameInfo (ByVal hHeap As HANDLE, ByVal pFni As FILENAMEI
     
     ''allocate items
     With *pFni
+        
         ''allocate file
         .lpszFile = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, FNI_CBFILE))
         If (.lpszFile = NULL) Then Return(GetLastError())
@@ -32,9 +33,9 @@ Public Function InitFileNameInfo (ByVal hHeap As HANDLE, ByVal pFni As FILENAMEI
         .lpszFileTitle = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, FNI_CBFILE))
         If (.lpszFileTitle = NULL) Then Return(GetLastError())
         
-        ''allocate file extention
-        .lpszExt = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, FNI_CBFILE))
-        If (.lpszExt = NULL) Then Return(GetLastError())
+        '.cchFileOffset = 0
+        '.cchExtOffset = 0
+        
     End With
     
     ''unlock the heap
@@ -60,7 +61,6 @@ Public Function FreeFileNameInfo (ByVal hHeap As HANDLE, ByVal pFni As FILENAMEI
     With *pFni
         If (HeapFree(hHeap, NULL, Cast(LPVOID, .lpszFile)) = FALSE) Then Return(GetLastError())
         If (HeapFree(hHeap, NULL, Cast(LPVOID, .lpszFileTitle)) = FALSE) Then Return(GetLastError())
-        If (HeapFree(hHeap, NULL, Cast(LPVOID, .lpszExt)) = FALSE) Then Return(GetLastError())
     End With
     
     ''unlock & destroy the heap

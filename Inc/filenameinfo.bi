@@ -16,10 +16,11 @@
 
 ''FNI structure definition
 Type FILENAMEINFO
-    lpszFile As LPTSTR      ''pointer to buffer containing full file name (ex. "C:\Folder\Example.txt")
-    lpszFileTitle As LPTSTR ''pointer to file name (ex. "Example.txt")
-    lpszExt As LPTSTR       ''file's extention (ex. "txt")
-    bReadOnly As BOOL       ''file is to be opened as read only
+    lpszFile As LPTSTR          ''pointer to buffer containing full file name (ex. "C:\Folder\Example.txt")
+    lpszFileTitle As LPTSTR     ''pointer to file name (ex. "Example.txt")
+    cchFileOffset As ULONG32    ''char offset of file name
+    cchExtOffset As ULONG32     ''char offset of file extention
+    bReadOnly As BOOL           ''file is to be opened as read only
 End Type
 
 /'  InitFileNameInfo/FreeFileNameInfo
