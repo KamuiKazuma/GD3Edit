@@ -4,7 +4,9 @@ LANGUAGE 9, 1
 
 #define IDR_VERSIONINFO         0x0001 //1
 
-#define IDI_KAZUSOFT            0x0064 //100
+#define IDI_GD3TAG              0x0064 //100
+#define IDI_GD3TAGSM            0x0065 //101
+#define IDI_KAZUSOFT            0x0066 //102
 
 #define IDD_MAIN                0x03E8 //1000
 #define IDC_SBR_MAIN            0x03E9 //1001
@@ -38,12 +40,13 @@ LANGUAGE 9, 1
 
 #define IDS_CHD_NAME            0x0200 //512
 #define IDS_CHD_VALUE           0x0201 //513
+#define IDS_CHD_VALUEHEX        0x0202 //514
 
 #define IDS_MSG_UNSAVED         0x0300 //768
 
 IDR_VERSIONINFO VERSIONINFO
-FILEVERSION     1, 0, 0, 45
-PRODUCTVERSION  1, 0, 0, 45
+FILEVERSION     1, 0, 0, 68
+PRODUCTVERSION  1, 0, 0, 57
 FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
 FILEFLAGS       VS_FF_DEBUG | VS_FF_PRIVATEBUILD | VS_FF_SPECIALBUILD
 FILEOS          VOS_NT_WINDOWS32
@@ -54,8 +57,8 @@ BEGIN
     BEGIN
         BLOCK "04090000"
         BEGIN
-            VALUE "FileVersion",        "1.0.0.45\0"
-            VALUE "ProductVersion",     "1.0.0.45\0"
+            VALUE "FileVersion",        "1.0.0.68\0"
+            VALUE "ProductVersion",     "1.0.0.57\0"
             VALUE "CompanyName",        "Kazusoft Co.\0"
             VALUE "LegalCopyright",     "Copyright (c) 2019 Kazusoft Co.\0"
             VALUE "LegalTrademarks",    "Kazusoft Co. and the Kazusoft logo are Trademarks of Lisa Murray\0"
@@ -63,7 +66,7 @@ BEGIN
             VALUE "InternalName",       "GD3Edit\0"
             VALUE "OriginalFilename",   "GD3Edit.exe\0"
             VALUE "ProductName",        "GD3Edit\0"
-            VALUE "PrivateBuild",       "Built by Lisa for testing listboxes\0"
+            VALUE "PrivateBuild",       "Built by Lisa for debugging.\0"
             VALUE "SpecialBuild",       "Test Build\0"
         END
     END
@@ -73,9 +76,11 @@ BEGIN
     END
 END
 
-IDI_KAZUSOFT ICON "Res/Kazusoft.ico"
+IDI_GD3TAG      ICON "Res/GD3Tag_64x64.ico"
+IDI_GD3TAGSM    ICON "Res/GD3Tag_32x32.ico"
+IDI_KAZUSOFT    ICON "Res/Kazusoft.ico"
 
-IDD_MAIN DIALOGEX 10, 10, 130, 80
+IDD_MAIN DIALOGEX 10, 10, 230, 160
 CAPTION     "GD3Edit"
 FONT        10, "Tahoma", 400, 0, 0
 CLASS       "MAINCLASS"
@@ -121,6 +126,7 @@ BEGIN
     IDS_LVI_VOLMOD          "Volume Modifier\0"
     IDS_CHD_NAME            "Name\0"
     IDS_CHD_VALUE           "Value\0"
+    IDS_CHD_VALUEHEX        "Value (Hex)\0"
     IDS_MSG_UNSAVED         "There are unsaved changes in the current file that will be lost if you don't save them.\nWould you like to save them now?"
 END
 

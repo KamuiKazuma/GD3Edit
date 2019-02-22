@@ -14,7 +14,9 @@
 #Define IDR_VERSIONINFO         &h0001
 
 ''icons
-#Define IDI_KAZUSOFT            &h0064
+#Define IDI_GD3TAG              &h0064
+#Define IDI_GD3TAGSM            &h0065
+#Define IDI_KAZUSOFT            &h0066
 
 ''dialogs
 #Define IDD_MAIN                &h03E8
@@ -51,6 +53,7 @@
 
 #Define IDS_CHD_NAME            &h0200
 #Define IDS_CHD_VALUE           &h0201
+#Define IDS_CHD_VALUEHEX        &h0202
 
 #Define IDS_MSG_UNSAVED         &h0300
 
@@ -87,7 +90,10 @@
 ''size of listview headings
 #Define CCH_LVHD                &h00000100
 #Define CB_LVHD                 Cast(SIZE_T, (CCH_LVHD * SizeOf(TCHAR)))
-#Define C_LVHD                  &h00000002
+#Define C_LVHD                  &h00000003
+#Define LVH_NAME                &h00000000
+#Define LVH_VALUE               &h00000001
+#Define LVH_VALUEHEX            &h00000002
 
 ''size of listview items
 #Define CCH_LVITEM              &h00000100
@@ -99,5 +105,10 @@
 #Define LVI_LOOPSAMPLES         &h00000003
 #Define LVI_TOTALSAMPLES        &h00000004
 #Define LVI_VOLMOD              &h00000005
+
+#Define CCH_LVIVALHEX           &h0000000A
+#Define CB_LVIVALHEX            Cast(SIZE_T, (CCH_LVIVALHEX * SizeOf(TCHAR)))
+#Define CCH_LVIVALDEC           &h0000000A
+#Define CB_LVIVALDEC            Cast(SIZE_T, (CCH_LVIVALDEC * SizeOf(TCHAR)))
 
 ''EOF
