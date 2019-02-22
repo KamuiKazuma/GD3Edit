@@ -33,8 +33,8 @@ Public Function InitFileNameInfo (ByVal hHeap As HANDLE, ByVal pFni As FILENAMEI
         .lpszFileTitle = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, FNI_CBFILE))
         If (.lpszFileTitle = NULL) Then Return(GetLastError())
         
-        '.cchFileOffset = 0
-        '.cchExtOffset = 0
+        .cchFileOffset = 0
+        .cchExtOffset = 0
         
     End With
     

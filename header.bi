@@ -20,10 +20,6 @@
     #Print "Compiling in release mode."
 #EndIf
 
-'#Ifndef UNICODE
-'    #Define UNICODE
-'#EndIf
-
 ''make sure target is Windows
 #Ifndef __FB_WIN32__
     #Error "This program must be compiled for Windows."
@@ -41,11 +37,6 @@
 ''define constants
 Const MainClass = "MAINCLASS"   ''main window class
 
-''declare shared variables
-Dim Shared hInstance As HINSTANCE   ''instance handle
-Dim Shared lpszCmdLine As LPSTR     ''command line
-Dim Shared hWin As HWND             ''main window handle
-
 ''declare functions
 
 ''main function
@@ -60,6 +51,8 @@ Declare Function StartMainDlg (ByVal hInst As HINSTANCE, ByVal nShowCmd As INT32
 ''main dialog procedure
 Declare Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPARAM, ByVal lParam As LPARAM) As LRESULT
 
+Declare Function CreateMainChildren (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As BOOL
+
 ''EnumChidWindows proc for resizing the main dialog 
 Declare Function ResizeMainChildren (ByVal hWnd As HWND, ByVal lParam As LPARAM) As BOOL
 
@@ -69,6 +62,8 @@ Declare Function BrowseForFile (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, By
 ''updates the main dialog's title bar
 Declare Function SetMainWndTitle (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, ByVal lpszFile As LPCTSTR) As BOOL
 
+Declare Sub SetupFileRights (ByVal bReadOnly As BOOL, ByRef dwAccess As DWORD32, ByRef dwShare As DWORD32)
+
 Declare Sub FatalErrorProc (ByVal hDlg As HWND, ByVal dwErrCode As DWORD32)
 
 ''displays the about message box
@@ -77,6 +72,6 @@ Declare Function AboutMsgBox (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As B
 Declare Function InitMainChildren (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As BOOL
 Declare Function InitMainListView (ByVal hInst As HINSTANCE, ByVal hWnd As HWND) As BOOL
 Declare Function InitMainListViewColumns (ByVal hInst As HINSTANCE, ByVal hHeap As HANDLE, ByVal hWnd As HWND) As BOOL
-Declare Function InitMainListViewItems (ByVal hInst As HINSTANCE, ByVal hHeap As HANDLE, ByVal hWnd As HWND) As BOOL
+Declare Function InitMainListViewItemNames (ByVal hInst As HINSTANCE, ByVal hHeap As HANDLE, ByVal hWnd As HWND) As BOOL
 
 ''EOF

@@ -217,11 +217,9 @@ Type VGM_DATA_BLOCK Field = 1
     lpData As LPBYTE    ''data
 End Type
 
-Declare Function InitVGMHeader (ByVal hHeap As HANDLE, ByVal pVgmHead As VGM_HEADER Ptr) As LRESULT
-Declare Function FreeVGMHeader (ByVal hHeap As HANDLE, ByVal pVgmHead As VGM_HEADER Ptr) As LRESULT
-Declare Function ReadVGMHeader (ByVal hHeap As HANDLE, ByVal hFile As HANDLE, ByVal pVgmHead As VGM_HEADER Ptr) As LRESULT
-Declare Function PrepareHeader (ByVal hHeap As HANDLE, ByVal pVgmHead As VGM_HEADER Ptr) As BOOL
-Declare Function MakeOffsetsAddresses (ByVal hHeap As HANDLE, ByVal pVgmHead As VGM_HEADER Ptr) As LRESULT
-Declare Function MakeAddressesOffsets (ByVal hHeap As HANDLE, ByVal pVgmHead As VGM_HEADER Ptr) As LRESULT
+Declare Function ReadVGMHeader (ByVal hFile As HANDLE, ByVal pVgmHead As VGM_HEADER Ptr) As LRESULT
+Declare Function PrepareHeader (ByVal pVgmHead As VGM_HEADER Ptr) As BOOL
+Declare Function MakeOffsetsAddresses (ByVal pVgmHead As VGM_HEADER Ptr) As BOOL
+Declare Function MakeAddressesOffsets (ByVal pVgmHead As VGM_HEADER Ptr) As BOOL
 
 ''EOF
