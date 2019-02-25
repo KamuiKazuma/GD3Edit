@@ -27,11 +27,18 @@
 
 ''include header files
 #Include Once "windows.bi"
+
+#Ifndef DWL_MSGRESULT
+    #Define DWL_MSGRESULT 0
+#EndIf
+
 #Include Once "win/commdlg.bi"
 #Include Once "win/commctrl.bi"
+#Include Once "win/prsht.bi"
 
-#Include "inc/vgmhead.bi"
 #Include "inc/filenameinfo.bi"
+#Include "inc/options.bi"
+#Include "inc/vgmhead.bi"
 #Include "defines.bi"
 
 ''define constants

@@ -7,18 +7,24 @@ LANGUAGE 9, 1
 #define IDI_GD3TAG              0x0064 //100
 #define IDI_GD3TAGSM            0x0065 //101
 #define IDI_KAZUSOFT            0x0066 //102
+#define IDI_WRENCH              0x0067 //103
 
 #define IDD_MAIN                0x03E8 //1000
-#define IDC_SBR_MAIN            0x03E9 //1001
+//#define IDC_SBR_MAIN            0x03E9 //1001
+//#define IDC_LIV_MAIN            0x03EA //1002
+
+#define IDD_GENOPTS             0x07D0 //2000
+#define IDC_CHK_SHOWFULLPATH    0x07D1 //2001
 
 #define IDR_MENUMAIN            0x2710 //10000
 #define IDM_FILE                0x2711 //10001
 #define IDM_OPEN                0x2712 //10002
 #define IDM_SAVE                0x2713 //10003
 #define IDM_SAVEAS              0x2714 //10004
-#define IDM_EXIT                0x2715 //10005
-#define IDM_OPTIONS             0x2716 //10006
-#define IDM_ABOUT               0x2717 //10007
+#define IDM_CLOSE               0x2715 //10005
+#define IDM_EXIT                0x2716 //10006
+#define IDM_OPTIONS             0x2717 //10007
+#define IDM_ABOUT               0x2718 //10008
 
 #define IDS_APPNAME             0x0001 //1
 #define IDS_ABOUT               0x0002 //2
@@ -27,9 +33,7 @@ LANGUAGE 9, 1
 #define IDS_BUILDDATE           0x0005 //5
 #define IDS_COMPILER            0x0006 //6
 #define IDS_SIGNATURE           0x0007 //7
-#define IDS_FILTER              0x0008 //8
-#define IDS_REG_SHOWFULLPATH    0x0009 //9
-#define IDS_REG_CUSTFILT        0x000A //10
+#define IDS_OPTIONS             0x0008 //8
 
 #define IDS_LVI_VGMVER          0x0100 //256
 #define IDS_LVI_LOOPBASE        0x0101 //257
@@ -44,9 +48,22 @@ LANGUAGE 9, 1
 
 #define IDS_MSG_UNSAVED         0x0300 //768
 
+#define IDS_REG_SHOWFULLPATH    0x0400 //1024
+#define IDS_REG_CUSTFILT        0x0401 //1025
+
+#define IDS_FILTER              0x0500 //1280
+
+//define property sheet sizes because GoRC doesn't seem to include these definitions by default.
+#define PROP_SM_CXDLG               0x00D4 //212
+#define PROP_SM_CYDLG               0x00BC //188
+#define PROP_MED_CXDLG              0x00E3 //227
+#define PROP_MED_CYDLG              0x00D7 //215
+#define PROP_LG_CXDLG               0x00FC //252
+#define PROP_LG_CYDLG               0x00DA //218
+
 IDR_VERSIONINFO VERSIONINFO
-FILEVERSION     1, 0, 0, 68
-PRODUCTVERSION  1, 0, 0, 57
+FILEVERSION     1, 0, 0, 73
+PRODUCTVERSION  1, 0, 0, 59
 FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
 FILEFLAGS       VS_FF_DEBUG | VS_FF_PRIVATEBUILD | VS_FF_SPECIALBUILD
 FILEOS          VOS_NT_WINDOWS32
@@ -57,8 +74,8 @@ BEGIN
     BEGIN
         BLOCK "04090000"
         BEGIN
-            VALUE "FileVersion",        "1.0.0.68\0"
-            VALUE "ProductVersion",     "1.0.0.57\0"
+            VALUE "FileVersion",        "1.0.0.73\0"
+            VALUE "ProductVersion",     "1.0.0.59\0"
             VALUE "CompanyName",        "Kazusoft Co.\0"
             VALUE "LegalCopyright",     "Copyright (c) 2019 Kazusoft Co.\0"
             VALUE "LegalTrademarks",    "Kazusoft Co. and the Kazusoft logo are Trademarks of Lisa Murray\0"
@@ -66,8 +83,8 @@ BEGIN
             VALUE "InternalName",       "GD3Edit\0"
             VALUE "OriginalFilename",   "GD3Edit.exe\0"
             VALUE "ProductName",        "GD3Edit\0"
-            VALUE "PrivateBuild",       "Built by Lisa for debugging.\0"
-            VALUE "SpecialBuild",       "Test Build\0"
+            VALUE "PrivateBuild",       "Built by Lisa for debugging property sheet pages.\0"
+            VALUE "SpecialBuild",       "Debug Build\0"
         END
     END
     BLOCK "VarFileInfo"
@@ -79,6 +96,7 @@ END
 IDI_GD3TAG      ICON "Res/GD3Tag_64x64.ico"
 IDI_GD3TAGSM    ICON "Res/GD3Tag_32x32.ico"
 IDI_KAZUSOFT    ICON "Res/Kazusoft.ico"
+IDI_WRENCH      ICON "Res/wrench.ico"
 
 IDD_MAIN DIALOGEX 10, 10, 230, 160
 CAPTION     "GD3Edit"
@@ -90,6 +108,16 @@ EXSTYLE     WS_EX_APPWINDOW | WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLB
 BEGIN
 END
 
+IDD_GENOPTS DIALOGEX 10, 10, PROP_SM_CXDLG, PROP_SM_CYDLG
+CAPTION     "General Options"
+FONT 10, "Tahoma", 400, 0, 0
+LANGUAGE 9, 1
+STYLE WS_CAPTION | WS_OVERLAPPED | WS_SYSMENU | WS_TILED | WS_VISIBLE
+EXSTYLE 0x00010080
+BEGIN
+    AUTOCHECKBOX "Show Full Path Names in Title Bar", IDC_CHK_SHOWFULLPATH, 10, 10, 120, 12, BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP
+END
+
 IDR_MENUMAIN MENUEX
 LANGUAGE 9, 1
 BEGIN
@@ -99,9 +127,12 @@ BEGIN
         MENUITEM "&Save", IDM_SAVE, MFT_STRING, MFS_DISABLED
         MENUITEM "Save &As", IDM_SAVEAS, MFT_STRING, MFS_DISABLED
         MENUITEM SEPARATOR
+        MENUITEM "&Close", IDM_CLOSE, MFT_STRING, MFS_DISABLED
+        MENUITEM SEPARATOR
         MENUITEM "E&xit", IDM_EXIT, MFT_STRING, MFS_ENABLED
+        MENUITEM SEPARATOR
+        MENUITEM "&Options", IDM_OPTIONS, MFT_STRING, MFS_ENABLED
     END
-    MENUITEM "&Options", IDM_OPTIONS, MFT_STRING, MFS_DISABLED
     MENUITEM "&About", IDM_ABOUT, MFT_STRING, MFS_ENABLED
 END
 
@@ -115,9 +146,7 @@ BEGIN
     IDS_BUILDDATE           "\nBuild Date:\t"
     IDS_COMPILER            "\nCompiler Information:"
     IDS_SIGNATURE           "\nSignature:\t\t"
-    IDS_FILTER              "VGM Files (*.VGM)\0*.VGM\0All Files\0*.*\0\0"
-    IDS_REG_SHOWFULLPATH    "Show Full Path in Title Bar"
-    IDS_REG_CUSTFILT        "Custom File Filter"
+    IDS_OPTIONS             "GD3Edit Options"
     IDS_LVI_VGMVER          "VGM Version\0"
     IDS_LVI_LOOPBASE        "Loop Base\0"
     IDS_LVI_LOOPMOD         "Loop Modifier\0"
@@ -128,6 +157,9 @@ BEGIN
     IDS_CHD_VALUE           "Value\0"
     IDS_CHD_VALUEHEX        "Value (Hex)\0"
     IDS_MSG_UNSAVED         "There are unsaved changes in the current file that will be lost if you don't save them.\nWould you like to save them now?"
+    IDS_REG_SHOWFULLPATH    "Show Full Path in Title Bar"
+    IDS_REG_CUSTFILT        "Custom File Filter"
+    IDS_FILTER              "VGM Files (*.VGM)\0*.VGM\0All Files\0*.*\0\0"
 END
 
 //EOF

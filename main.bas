@@ -23,10 +23,10 @@
 
 ''include header file
 #Include "header.bi"
-#Include "mod/createtooltip/createtooltip.bi"
+'#Include "mod/createtooltip/createtooltip.bi"
 #Include "mod/errmsgbox/errmsgbox.bi"
 #Include "mod/heapptrlist/heapptrlist.bi"
-#Include "mod/openproghkey/openproghkey.bi"
+'#Include "mod/openproghkey/openproghkey.bi"
 
 Dim Shared hInstance As HINSTANCE
 Dim Shared lpszCmdLine As LPSTR
@@ -38,7 +38,7 @@ InitCommonControls()
 Dim uExitCode As UINT32 = Cast(UINT32, WinMain(hInstance, NULL, lpszCmdLine, SW_SHOWNORMAL))
 
 #If __FB_DEBUG__
-    ? !"uExitCode\t= 0x"; Hex(uExitCode, 8)
+    ? !"uExitCode\t= 0x"; Hex(uExitCode)
 #EndIf
 
 ExitProcess(uExitCode)
@@ -49,11 +49,11 @@ Function WinMain (ByVal hInst As HINSTANCE, ByVal hInstPrev As HINSTANCE, ByVal 
     
     #If __FB_DEBUG__
         ? "Calling:", __FUNCTION__
-        ? !"hInst\t= 0x"; Hex(hInst, 8)
-        ? !"hInstPrev\t= 0x"; Hex(hInstPrev, 8)
-        ? !"lpszCmdLine\t= 0x"; Hex(lpszCmdLine, 8)
+        ? !"hInst\t= 0x"; Hex(hInst)
+        ? !"hInstPrev\t= 0x"; Hex(hInstPrev)
+        ? !"lpszCmdLine\t= 0x"; Hex(lpszCmdLine)
         ? !"*lpszCmdLine\t= "; *lpszCmdLine
-        ? !"nShowCmd\t= 0x"; hex(nShowCmd, 8)
+        ? !"nShowCmd\t= 0x"; hex(nShowCmd)
     #EndIf
     
     If (InitClasses(hInst) = FALSE) Then Return(GetLastError())
@@ -86,7 +86,7 @@ Private Function InitClasses (ByVal hInst As HINSTANCE) As BOOL
     
     #If __FB_DEBUG__
         ? "Calling:", __FUNCTION__
-        ? !"hInst\t= 0x"; Hex(hInst, 8)
+        ? !"hInst\t= 0x"; Hex(hInst)
     #EndIf
     
     ''make sure hInst is a valid handle
@@ -127,9 +127,9 @@ Private Function StartMainDlg (ByVal hInst As HINSTANCE, ByVal nShowCmd As INT32
     
     #If __FB_DEBUG__
         ? "Calling:", __FUNCTION__
-        ? !"hInst\t= 0x"; Hex(hInst, 8)
-        ? !"nShowCmd\t= 0x"; Hex(nShowCmd, 8)
-        ? !"lParam\t= 0x"; Hex(lParam, 8)
+        ? !"hInst\t= 0x"; Hex(hInst)
+        ? !"nShowCmd\t= 0x"; Hex(nShowCmd)
+        ? !"lParam\t= 0x"; Hex(lParam)
     #EndIf
     
     ''create the main dialog
@@ -155,7 +155,6 @@ End Function
 Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPARAM, ByVal lParam As LPARAM) As LRESULT
     
     Static hFni As HANDLE
-    'Static hVgmHead As HANDLE
     Static fni As FILENAMEINFO
     Static vgmHead As VGM_HEADER
     
@@ -172,10 +171,6 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
             hFni = HeapCreate(NULL, SizeOf(FILENAMEINFO), SizeOf(FILENAMEINFO))
             If (hFni = INVALID_HANDLE_VALUE) Then FatalErrorProc(hWnd, GetLastError())
             
-            '''create a heap for the VGM header
-            'hVgmHead = HeapCreate(NULL, SizeOf(VGM_HEADER), SizeOf(VGM_HEADER))
-            'If (hVgmHead = INVALID_HANDLE_VALUE) Then FatalErrorProc(hWnd, GetLastError())
-            
             ''initialize the file name info structure
             SetLastError(InitFileNameInfo(hFni, @fni))
             If (GetLastError()) Then FatalErrorProc(hWnd, GetLastError())
@@ -188,7 +183,6 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
             
             ''destroy the local heaps
             If (HeapDestroy(hFni) = FALSE) Then FatalErrorProc(hWnd, GetLastError())
-            'If (HeapDestroy(hVgmHead) = FALSE) Then FatalErrorProc(hWnd, GetLastError())
             
             ''post quit message
             PostQuitMessage(ERROR_SUCCESS)
@@ -244,11 +238,16 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
                             
                         Case IDM_SAVEAS
                             
+                        Case IDM_CLOSE
+                            
                         Case IDM_EXIT
                             
                             SendMessage(hWnd, WM_CLOSE, NULL, NULL)
                             
                         Case IDM_OPTIONS
+                            
+                            SetLastError(StartOptionsMenu(hInstance, hWnd, 0))
+                            If (GetLastError()) Then SysErrMsgBox(hWnd, GetLastError())
                             
                         Case IDM_ABOUT
                             
@@ -292,8 +291,8 @@ Private Function CreateMainChildren (ByVal hInst As HINSTANCE, ByVal hDlg As HWN
     
     #If __FB_DEBUG__
         ? "Calling:", __FILE__; "/"; __FUNCTION__
-        ? !"hInst\t= 0x"; Hex(hInst, 8)
-        ? !"hDlg\t= 0x"; Hex(hDlg, 8)
+        ? !"hInst\t= 0x"; Hex(hInst)
+        ? !"hDlg\t= 0x"; Hex(hDlg)
     #EndIf
     
     Dim icex As InitCommonControlsEx
@@ -353,9 +352,9 @@ Private Function BrowseForFile (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, By
     
     #If __FB_DEBUG__
         ? "Calling:", __FILE__; "/"; __FUNCTION__
-        ? !"hInst\t= 0x"; Hex(hInst, 8)
-        ? !"hDlg\t= 0x"; Hex(hDlg, 8)
-        ? !"pFni\t= 0x"; Hex(pfni, 8)
+        ? !"hInst\t= 0x"; Hex(hInst)
+        ? !"hDlg\t= 0x"; Hex(hDlg)
+        ? !"pFni\t= 0x"; Hex(pfni)
     #EndIf
     
     ''set waiting cursor
@@ -445,9 +444,9 @@ Private Function SetMainWndTitle (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, 
     
     #If __FB_DEBUG__
         ? "Calling:", __FILE__; "/"; __FUNCTION__
-        ? !"hInst\t= 0x"; Hex(hInst, 8)
-        ? !"hDlg\t= 0x"; Hex(hDlg, 8)
-        ? !"lpszFile\t= 0x"; Hex(lpszFile, 8)
+        ? !"hInst\t= 0x"; Hex(hInst)
+        ? !"hDlg\t= 0x"; Hex(hDlg)
+        ? !"lpszFile\t= 0x"; Hex(lpszFile)
         ? !"*lpszFile\t= "; *lpszFile
     #EndIf
     
@@ -465,7 +464,7 @@ Private Function SetMainWndTitle (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, 
     Dim lpszAppName As LPTSTR = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, CB_APPNAME))
     If (lpszAppName = NULL) Then Return(FALSE)
     #If __FB_DEBUG__
-        ? !"lpszAppName\t= 0x"; Hex(lpszAppName, 8)
+        ? !"lpszAppName\t= 0x"; Hex(lpszAppName)
     #EndIf
     
     ''load the app name
@@ -489,7 +488,7 @@ Private Function SetMainWndTitle (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, 
     Dim lpszTitle As LPTSTR = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, Cast(SIZE_T, (cchTitle * SizeOf(TCHAR)))))
     If (lpszTitle = NULL) Then Return(FALSE)
     #If __FB_DEBUG__
-        ? !"lpszTitle\t= 0x"; Hex(lpszTitle, 8)
+        ? !"lpszTitle\t= 0x"; Hex(lpszTitle)
     #EndIf
     
     *lpszTitle = (*lpszAppName + " - [" + *lpszFile + "]")
@@ -528,8 +527,10 @@ End Sub
 
 ''displays a system error message box and posts a quit message
 Private Sub FatalErrorProc (ByVal hDlg As HWND, ByVal dwErrCode As DWORD32)
+    
     SysErrMsgBox(hDlg, dwErrCode)
     PostQuitMessage(dwErrCode)
+    
 End Sub
 
 ''display the about message box
@@ -537,8 +538,8 @@ Private Function AboutMsgBox (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As B
     
     #If __FB_DEBUG__
         ? "Calling:", __FILE__; "/"; __FUNCTION__
-        ? !"hInst\t= 0x"; Hex(hInst, 8)
-        ? !"hDlg\t= 0x"; Hex(hDlg, 8)
+        ? !"hInst\t= 0x"; Hex(hInst)
+        ? !"hDlg\t= 0x"; Hex(hDlg)
     #EndIf
     
     ''set loading cursor
@@ -615,6 +616,7 @@ Private Function AboutMsgBox (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As B
     
 End Function
 
+''Initializes the main dialog's child windows
 Private Function InitMainChildren (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As BOOL
     
     #If __FB_DEBUG__

@@ -4,7 +4,6 @@
     
     VGMPlay's VGMFile.h translated to FB by Lisa.
     
-    
 '/
 
 #Pragma Once
