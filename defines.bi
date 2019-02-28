@@ -62,6 +62,9 @@
 #Define IDS_LVI_LOOPSAMPLES     &h0103
 #Define IDS_LVI_TOTALSAMPLES    &h0104
 #Define IDS_LVI_VOLMOD          &h0105
+#Define IDS_LVI_RATE            &h0106
+#Define IDS_LVI_EOFOFF          &h0107
+#Define IDS_LVI_GD3OFF          &h0108
 
 #Define IDS_CHD_NAME            &h0200
 #Define IDS_CHD_VALUE           &h0201
@@ -115,13 +118,16 @@
 ''size of listview items
 #Define CCH_LVITEM              &h00000100
 #Define CB_LVITEM               Cast(SIZE_T, (CCH_LVITEM * SizeOf(TCHAR)))
-#Define C_LVITEM                &h00000006
+#Define C_LVITEM                &h00000009
 #Define LVI_VGMVER              &h00000000
 #Define LVI_LOOPBASE            &h00000001
 #Define LVI_LOOPMOD             &h00000002
 #Define LVI_LOOPSAMPLES         &h00000003
 #Define LVI_TOTALSAMPLES        &h00000004
 #Define LVI_VOLMOD              &h00000005
+#Define LVI_RATE                &h00000006
+#Define LVI_EOFOFF              &h00000007
+#Define LVI_GD3OFF              &h00000008
 
 '#Define CCH_LVIVALHEX           &h0000000A
 '#Define CB_LVIVALHEX            Cast(SIZE_T, (CCH_LVIVALHEX * SizeOf(TCHAR)))

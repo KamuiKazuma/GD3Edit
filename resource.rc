@@ -41,6 +41,9 @@ LANGUAGE 9, 1
 #define IDS_LVI_LOOPSAMPLES     0x0103 //259
 #define IDS_LVI_TOTALSAMPLES    0x0104 //260
 #define IDS_LVI_VOLMOD          0x0105 //261
+#define IDS_LVI_RATE            0x0106 //262
+#define IDS_LVI_EOFOFF          0x0107 //263
+#define IDS_LVI_GD3OFF          0x0108 //264
 
 #define IDS_CHD_NAME            0x0200 //512
 #define IDS_CHD_VALUE           0x0201 //513
@@ -62,8 +65,8 @@ LANGUAGE 9, 1
 #define PROP_LG_CYDLG               0x00DA //218
 
 IDR_VERSIONINFO VERSIONINFO
-FILEVERSION     1, 0, 0, 73
-PRODUCTVERSION  1, 0, 0, 59
+FILEVERSION     1, 0, 0, 75
+PRODUCTVERSION  1, 0, 0, 61
 FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
 FILEFLAGS       VS_FF_DEBUG | VS_FF_PRIVATEBUILD | VS_FF_SPECIALBUILD
 FILEOS          VOS_NT_WINDOWS32
@@ -74,8 +77,8 @@ BEGIN
     BEGIN
         BLOCK "04090000"
         BEGIN
-            VALUE "FileVersion",        "1.0.0.73\0"
-            VALUE "ProductVersion",     "1.0.0.59\0"
+            VALUE "FileVersion",        "1.0.0.75\0"
+            VALUE "ProductVersion",     "1.0.0.61\0"
             VALUE "CompanyName",        "Kazusoft Co.\0"
             VALUE "LegalCopyright",     "Copyright (c) 2019 Kazusoft Co.\0"
             VALUE "LegalTrademarks",    "Kazusoft Co. and the Kazusoft logo are Trademarks of Lisa Murray\0"
@@ -104,16 +107,16 @@ FONT        10, "Tahoma", 400, 0, 0
 CLASS       "MAINCLASS"
 LANGUAGE    9, 1
 STYLE       WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_OVERLAPPED | WS_OVERLAPPEDWINDOW | WS_SIZEBOX | WS_SYSMENU | WS_VISIBLE //0x10CF0000
-EXSTYLE     WS_EX_APPWINDOW | WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR //0x00040000
+EXSTYLE     WS_EX_APPWINDOW | WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR | WS_EX_CONTROLPARENT
 BEGIN
 END
 
 IDD_GENOPTS DIALOGEX 10, 10, PROP_SM_CXDLG, PROP_SM_CYDLG
 CAPTION     "General Options"
-FONT 10, "Tahoma", 400, 0, 0
-LANGUAGE 9, 1
-STYLE WS_CAPTION | WS_OVERLAPPED | WS_SYSMENU | WS_TILED | WS_VISIBLE
-EXSTYLE 0x00010080
+FONT        10, "Tahoma", 400, 0, 0
+LANGUAGE    9, 1
+STYLE       WS_CAPTION | WS_OVERLAPPED | WS_SYSMENU | WS_TILED | WS_VISIBLE
+EXSTYLE     0x00010080
 BEGIN
     AUTOCHECKBOX "Show Full Path Names in Title Bar", IDC_CHK_SHOWFULLPATH, 10, 10, 120, 12, BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP
 END
@@ -153,6 +156,9 @@ BEGIN
     IDS_LVI_LOOPSAMPLES     "Loop Samples\0"
     IDS_LVI_TOTALSAMPLES    "Total Samples\0"
     IDS_LVI_VOLMOD          "Volume Modifier\0"
+    IDS_LVI_RATE            "Rate\0"
+    IDS_LVI_EOFOFF          "End of File Offset\0"
+    IDS_LVI_GD3OFF          "GD3 Tag Offset\0"
     IDS_CHD_NAME            "Name\0"
     IDS_CHD_VALUE           "Value\0"
     IDS_CHD_VALUEHEX        "Value (Hex)\0"

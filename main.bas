@@ -300,11 +300,11 @@ Private Function CreateMainChildren (ByVal hInst As HINSTANCE, ByVal hDlg As HWN
     
     icex.dwICC = ICC_BAR_CLASSES
     InitCommonControlsEx(@icex)
-    If (CreateWindowEx(WS_EX_STATICEDGE, STATUSCLASSNAME, NULL, (SBARS_SIZEGRIP Or SBARS_TOOLTIPS Or WS_CHILD Or WS_VISIBLE), CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, hDlg, Cast(HMENU, IDC_SBR_MAIN), hInstance, NULL) = INVALID_HANDLE_VALUE) Then Return(FALSE)
+    If (CreateWindowEx(WS_EX_STATICEDGE, STATUSCLASSNAME, NULL, (SBARS_SIZEGRIP Or SBARS_TOOLTIPS Or WS_CHILD Or WS_VISIBLE), CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, hDlg, Cast(HMENU, IDC_SBR_MAIN), hInst, NULL) = INVALID_HANDLE_VALUE) Then Return(FALSE)
     
     icex.dwICC = ICC_LISTVIEW_CLASSES
     InitCommonControlsEx(@icex)
-    If (CreateWindowEx((LVS_EX_GRIDLINES Or WS_EX_CLIENTEDGE Or WS_EX_CONTROLPARENT Or WS_EX_RIGHT), WC_LISTVIEW, NULL, (LVS_NOSORTHEADER Or LVS_REPORT Or LVS_SINGLESEL Or WS_CHILD Or WS_TABSTOP Or WS_VISIBLE Or WS_VSCROLL), CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, hDlg, Cast(HMENU, IDC_LIV_MAIN), hInstance, NULL) = INVALID_HANDLE_VALUE) Then Return(FALSE)
+    If (CreateWindowEx((LVS_EX_GRIDLINES Or WS_EX_CLIENTEDGE Or WS_EX_CONTROLPARENT Or WS_EX_RIGHT), WC_LISTVIEW, NULL, (LVS_NOSORTHEADER Or LVS_REPORT Or LVS_SINGLESEL Or WS_CHILD Or WS_TABSTOP Or WS_VISIBLE Or WS_VSCROLL), 0, 0, 100, 100, hDlg, Cast(HMENU, IDC_LIV_MAIN), hInst, NULL) = INVALID_HANDLE_VALUE) Then Return(FALSE)
     
     SetLastError(ERROR_SUCCESS)
     Return(TRUE)
@@ -660,6 +660,7 @@ Private Function InitMainListView (ByVal hInst As HINSTANCE, ByVal hWnd As HWND)
     If (InitMainListViewColumns(hInst, hHeap, hWnd) = FALSE) Then Return(FALSE)
     If (InitMainListViewItemNames(hInst, hHeap, hWnd) = FALSE) Then Return(FALSE)
     SendMessage(hWnd, WM_SETREDRAW, TRUE, NULL)
+    SendMessage(hWnd, WM_VSCROLL, NULL, NULL)
     
     ''destroy the local heap
     If (HeapDestroy(hHeap) = FALSE) Then Return(FALSE)
@@ -770,6 +771,12 @@ Private Function InitMainListViewItemNames (ByVal hInst As HINSTANCE, ByVal hHea
         pLvi->pszText   = plpszItem[iItem]
         If (SendMessage(hWnd, LVM_INSERTITEM, NULL, Cast(LPARAM, pLvi)) = -1) Then Return(FALSE)
     Next iItem
+    
+    'Dim szText As ZString*10 = "Test"
+    'pLvi->iItem = 0
+    'pLvi->iSubItem = 1
+    'pLvi->pszText = Cast(LPTSTR, @szText)
+    'If (SendMessage(hWnd, LVM_SETITEM, NULL, Cast(LPARAM, pLvi)) = FALSE) Then Return(FALSE)
     
     ''free listview item names and the item structure
     If (HeapFree(hHeap, NULL, Cast(LPVOID, pLvi)) = FALSE) Then Return(FALSE)
