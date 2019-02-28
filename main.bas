@@ -23,24 +23,27 @@
 
 ''include header file
 #Include "header.bi"
-'#Include "mod/createtooltip/createtooltip.bi"
 #Include "mod/errmsgbox/errmsgbox.bi"
 #Include "mod/heapptrlist/heapptrlist.bi"
-'#Include "mod/openproghkey/openproghkey.bi"
 
-Dim Shared hInstance As HINSTANCE
-Dim Shared lpszCmdLine As LPSTR
-Dim Shared hWin As HWND
-hInstance = GetModuleHandle(NULL) ''get a handle to this module's instance
-lpszCmdLine = GetCommandLine() ''get the command-line parameters
+Dim Shared hInstance As HINSTANCE   ''global app instance handle
+Dim Shared hWin As HWND             ''global main window handle
+
+Dim lpszCmdLine As LPSTR            ''command line string to pass to WinMain
+
+Dim uExitCode As UINT32             ''program exit code
+
+hInstance = GetModuleHandle(NULL)   ''get a handle to this module's instance
+lpszCmdLine = GetCommandLine()      ''get the command-line
 InitCommonControls()
 
-Dim uExitCode As UINT32 = Cast(UINT32, WinMain(hInstance, NULL, lpszCmdLine, SW_SHOWNORMAL))
+''start the application
+uExitCode = Cast(UINT32, WinMain(hInstance, NULL, lpszCmdLine, SW_SHOWNORMAL))
 
+''exit app
 #If __FB_DEBUG__
     ? !"uExitCode\t= 0x"; Hex(uExitCode)
 #EndIf
-
 ExitProcess(uExitCode)
 End(uExitCode)
 
@@ -48,7 +51,7 @@ End(uExitCode)
 Function WinMain (ByVal hInst As HINSTANCE, ByVal hInstPrev As HINSTANCE, ByVal lpszCmdLine As LPSTR, ByVal nShowCmd As INT32) As LRESULT
     
     #If __FB_DEBUG__
-        ? "Calling:", __FUNCTION__
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
         ? !"hInst\t= 0x"; Hex(hInst)
         ? !"hInstPrev\t= 0x"; Hex(hInstPrev)
         ? !"lpszCmdLine\t= 0x"; Hex(lpszCmdLine)
@@ -82,15 +85,14 @@ Function WinMain (ByVal hInst As HINSTANCE, ByVal hInstPrev As HINSTANCE, ByVal 
 End Function
 
 ''initializes classes
-Private Function InitClasses (ByVal hInst As HINSTANCE) As BOOL
+Private Function InitClasses () As BOOL
     
     #If __FB_DEBUG__
-        ? "Calling:", __FUNCTION__
-        ? !"hInst\t= 0x"; Hex(hInst)
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
     #EndIf
     
-    ''make sure hInst is a valid handle
-    If (hInst = INVALID_HANDLE_VALUE) Then
+    ''make sure hInstance is a valid handle
+    If (hInstance = INVALID_HANDLE_VALUE) Then
         SetLastError(ERROR_INVALID_HANDLE)
         Return(FALSE)
     End If
@@ -105,12 +107,12 @@ Private Function InitClasses (ByVal hInst As HINSTANCE) As BOOL
         .cbClsExtra     = 0
         .cbWndExtra     = DLGWINDOWEXTRA
         .hInstance      = hInst
-        .hIcon          = LoadIcon(hInst, MAKEINTRESOURCE(IDI_GD3TAG))
+        .hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_GD3TAG))
         .hCursor        = LoadCursor(NULL, IDC_ARROW)
         .hbrBackground  = Cast(HBRUSH, (COLOR_BTNFACE + 1))
         .lpszMenuName   = MAKEINTRESOURCE(IDR_MENUMAIN)
         .lpszClassName  = Cast(LPCTSTR, @MainClass)
-        .hIconSm        = LoadIcon(hInst, MAKEINTRESOURCE(IDI_GD3TAGSM))
+        .hIconSm        = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_GD3TAGSM))
     End With
     
     ''register main class
@@ -123,11 +125,10 @@ Private Function InitClasses (ByVal hInst As HINSTANCE) As BOOL
 End Function
 
 ''starts the main dialog, to be called only by WinMain, do not call this function.
-Private Function StartMainDlg (ByVal hInst As HINSTANCE, ByVal nShowCmd As INT32, ByVal lParam As LPARAM) As BOOL
+Private Function StartMainDlg (ByVal nShowCmd As INT32, ByVal lParam As LPARAM) As BOOL
     
     #If __FB_DEBUG__
-        ? "Calling:", __FUNCTION__
-        ? !"hInst\t= 0x"; Hex(hInst)
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
         ? !"nShowCmd\t= 0x"; Hex(nShowCmd)
         ? !"lParam\t= 0x"; Hex(lParam)
     #EndIf
@@ -287,25 +288,27 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
 End Function
 
 ''creates the main dialog's child windows
-Private Function CreateMainChildren (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As BOOL
+Private Function CreateMainChildren (ByVal hDlg As HWND) As BOOL
     
     #If __FB_DEBUG__
-        ? "Calling:", __FILE__; "/"; __FUNCTION__
-        ? !"hInst\t= 0x"; Hex(hInst)
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
         ? !"hDlg\t= 0x"; Hex(hDlg)
     #EndIf
     
     Dim icex As InitCommonControlsEx
     icex.dwSize = SizeOf(InitCommonControlsEx)
     
+    ''create status bar
     icex.dwICC = ICC_BAR_CLASSES
     InitCommonControlsEx(@icex)
-    If (CreateWindowEx(WS_EX_STATICEDGE, STATUSCLASSNAME, NULL, (SBARS_SIZEGRIP Or SBARS_TOOLTIPS Or WS_CHILD Or WS_VISIBLE), CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, hDlg, Cast(HMENU, IDC_SBR_MAIN), hInst, NULL) = INVALID_HANDLE_VALUE) Then Return(FALSE)
+    If (CreateWindowEx(WS_EX_STATICEDGE, STATUSCLASSNAME, NULL, (SBARS_SIZEGRIP Or SBARS_TOOLTIPS Or WS_CHILD Or WS_VISIBLE), CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, hDlg, Cast(HMENU, IDC_SBR_MAIN), hInstance, NULL) = INVALID_HANDLE_VALUE) Then Return(FALSE)
     
+    ''create main listview
     icex.dwICC = ICC_LISTVIEW_CLASSES
     InitCommonControlsEx(@icex)
-    If (CreateWindowEx((LVS_EX_GRIDLINES Or WS_EX_CLIENTEDGE Or WS_EX_CONTROLPARENT Or WS_EX_RIGHT), WC_LISTVIEW, NULL, (LVS_NOSORTHEADER Or LVS_REPORT Or LVS_SINGLESEL Or WS_CHILD Or WS_TABSTOP Or WS_VISIBLE Or WS_VSCROLL), 0, 0, 100, 100, hDlg, Cast(HMENU, IDC_LIV_MAIN), hInst, NULL) = INVALID_HANDLE_VALUE) Then Return(FALSE)
+    If (CreateWindowEx((LVS_EX_GRIDLINES Or WS_EX_CLIENTEDGE Or WS_EX_CONTROLPARENT Or WS_EX_RIGHT), WC_LISTVIEW, NULL, (LVS_NOSORTHEADER Or LVS_REPORT Or LVS_SINGLESEL Or WS_CHILD Or WS_TABSTOP Or WS_VISIBLE Or WS_VSCROLL), 0, 0, 100, 100, hDlg, Cast(HMENU, IDC_LIV_MAIN), hInstance, NULL) = INVALID_HANDLE_VALUE) Then Return(FALSE)
     
+    ''return
     SetLastError(ERROR_SUCCESS)
     Return(TRUE)
     
@@ -348,18 +351,16 @@ Private Function ResizeMainChildren (ByVal hWnd As HWND, ByVal lParam As LPARAM)
 End Function
 
 ''starts the open dialog to browse for a file
-Private Function BrowseForFile (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, ByVal pFni As FILENAMEINFO Ptr) As BOOL
+Private Function BrowseForFile (ByVal hDlg As HWND, ByVal pFni As FILENAMEINFO Ptr) As BOOL
     
     #If __FB_DEBUG__
-        ? "Calling:", __FILE__; "/"; __FUNCTION__
-        ? !"hInst\t= 0x"; Hex(hInst)
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
         ? !"hDlg\t= 0x"; Hex(hDlg)
         ? !"pFni\t= 0x"; Hex(pfni)
     #EndIf
     
     ''set waiting cursor
-    Dim hCurPrev As HCURSOR = SetCursor(LoadCursor(hInst, IDC_WAIT))
-    If (hCurPrev = INVALID_HANDLE_VALUE) Then Return(FALSE)
+    Dim hCurPrev As HCURSOR = SetCursor(LoadCursor(hInstance, IDC_WAIT))
     
     ''create a local heap
     Dim hHeap As HANDLE = HeapCreate(NULL, SizeOf(OPENFILENAME), NULL)
@@ -367,9 +368,6 @@ Private Function BrowseForFile (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, By
     #If __FB_DEBUG__
         ? !"hHeap\t= 0x"; Hex(hHeap)
     #EndIf
-    
-    ''lock the local heap
-    If (HeapLock(hHeap) = FALSE) Then Return(FALSE)
     
     ''allocate file filter
     Dim lpszFilt As LPTSTR = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, CB_FILTER))
@@ -379,7 +377,7 @@ Private Function BrowseForFile (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, By
     #EndIf
     
     ''load the file filter
-    If (LoadString(hInst, IDS_FILTER, lpszFilt, CCH_FILTER) = 0) Then Return(FALSE)
+    If (LoadString(hInstance, IDS_FILTER, lpszFilt, CCH_FILTER) = 0) Then Return(FALSE)
     #If __FB_DEBUG__
         ? !"*lpszFilt\t= "; *lpszFilt
     #EndIf
@@ -395,22 +393,25 @@ Private Function BrowseForFile (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, By
     With *lpOfn
         .lStructSize        = SizeOf(OPENFILENAME)
         .hwndOwner          = hDlg
-        .hInstance          = NULL
+        '.hInstanceance          = NULL
         .lpstrFilter        = Cast(LPCTSTR, lpszFilt)
-        .lpstrCustomFilter  = NULL
-        .nMaxCustFilter     = NULL
+        '.lpstrCustomFilter  = NULL
+        '.nMaxCustFilter     = NULL
         .nFilterIndex       = 1
         .lpstrFile          = pFni->lpszFile
         .nMaxFile           = MAX_PATH
         .lpstrFileTitle     = pFni->lpszFileTitle
         .nMaxFileTitle      = MAX_PATH
-        .lpstrInitialDir    = NULL
-        .lpstrTitle         = NULL
+        '.lpstrInitialDir    = NULL
+        '.lpstrTitle         = NULL
         .Flags              = (OFN_DONTADDTORECENT Or OFN_FILEMUSTEXIST Or OFN_PATHMUSTEXIST)
         .nFileOffset        = pFni->cchFileOffset
         .nFileExtension     = pFni->cchExtOffset
-        .lpstrDefExt        = NULL
+        '.lpstrDefExt        = NULL
     End With
+    
+    ''restore cursor
+    SetCursor(hCurPrev)
     
     If (GetOpenFileName(lpOfn)) Then
         If (lpOfn->Flags And OFN_READONLY) Then
@@ -420,17 +421,17 @@ Private Function BrowseForFile (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, By
         End If
     End If
     
+    ''set waiting cursor
+    hCurPrev = SetCursor(LoadCursor(NULL, IDC_WAIT))
+    
     ''free memory
     If (HeapFree(hHeap, NULL, Cast(LPVOID, lpOfn)) = FALSE) Then Return(FALSE)
     If (HeapFree(hHeap, NULL, Cast(LPVOID, lpszFilt)) = FALSE) Then Return(FALSE)
     
-    ''unlock the heap
-    If (HeapUnlock(hHeap) = FALSE) Then Return(FALSE)
-    
     ''destroy the local heap
     If (HeapDestroy(hHeap) = FALSE) Then Return(FALSE)
     
-    ''restore old cursor
+    ''restore cursor
     SetCursor(hCurPrev)
     
     ''return
@@ -439,16 +440,23 @@ Private Function BrowseForFile (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, By
     
 End Function
 
-''updates the main dialog's title bar
-Private Function SetMainWndTitle (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, ByVal lpszFile As LPCTSTR) As BOOL
+/'updates the main dialog's title bar
+    hDlg:HWND           -   Handle to the main window.
+    lpszFile:LPCTSTR    -   File name to use to set the file title to. Uses
+                            the form "<app name> - [<file name>]". If this is
+                            NULL, then the title is reset.
+'/
+Private Function SetMainWndTitle (ByVal hDlg As HWND, ByVal lpszFile As LPCTSTR) As BOOL
     
     #If __FB_DEBUG__
-        ? "Calling:", __FILE__; "/"; __FUNCTION__
-        ? !"hInst\t= 0x"; Hex(hInst)
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
         ? !"hDlg\t= 0x"; Hex(hDlg)
         ? !"lpszFile\t= 0x"; Hex(lpszFile)
         ? !"*lpszFile\t= "; *lpszFile
     #EndIf
+    
+    ''set waiting cursor
+    Dim hCurPrev As HCURSOR = SetCursor(LoadCursor(NULL, IDC_WAIT))
     
     ''create a local heap
     Dim hHeap As HANDLE = HeapCreate(NULL, CB_APPNAME, NULL)
@@ -456,9 +464,6 @@ Private Function SetMainWndTitle (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, 
     #If __FB_DEBUG__
         ? !"hHeap\t= 0x"; Hex(hHeap)
     #EndIf
-    
-    ''get a lock on the heap
-    If (HeapLock(hHeap) = FALSE) Then Return(FALSE)
     
     ''allocate space for app name
     Dim lpszAppName As LPTSTR = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, CB_APPNAME))
@@ -468,18 +473,25 @@ Private Function SetMainWndTitle (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, 
     #EndIf
     
     ''load the app name
-    If (LoadString(hInst, IDS_APPNAME, lpszAppName, CCH_APPNAME) = 0) Then Return(FALSE)
+    If (LoadString(hInstance, IDS_APPNAME, lpszAppName, CCH_APPNAME) = 0) Then Return(FALSE)
     #If __FB_DEBUG__
         ? !"*lpszAppName\t= "; *lpszAppName
     #EndIf
         
-    ''calculate number of chars to allocate
-    Dim cchTitle As ULONG32
-    If (lpszFile) Then
-        cchTitle = (CCH_APPNAME + MAX_PATH + 5)
-    Else
-        cchTitle = (CCH_APPNAME)
+    ''if no file name is specified, then set the title to the app name
+    If (lpszFile = NULL) Then
+        If (SetWindowText(hDlg, Cast(LPCTSTR, lpszAppName)) = FALSE) Then Return(FALSE)
+        
+        ''restore cursor
+        SetCursor(hCurPrev)
+        
+        ''return
+        SetLastError(ERROR_SUCCESS)
+        Return(TRUE)
     End If
+    
+    ''calculate the number of characters for the new title
+    Dim cchTitle As ULONG32 = (CCH_APPNAME + MAX_PATH + 5) ''5 is the size of the " - [" & "]" strings in chars
     #If __FB_DEBUG__
         ? !"cchTitle\t= "; cchTitle
     #EndIf
@@ -491,6 +503,7 @@ Private Function SetMainWndTitle (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, 
         ? !"lpszTitle\t= 0x"; Hex(lpszTitle)
     #EndIf
     
+    ''format the application title
     *lpszTitle = (*lpszAppName + " - [" + *lpszFile + "]")
     #If __FB_DEBUG__
         ? !"*lpszTitle\t= "; *lpszTitle
@@ -503,9 +516,11 @@ Private Function SetMainWndTitle (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, 
     If (HeapFree(hHeap, NULL, Cast(LPVOID, lpszAppName)) = FALSE) Then Return(FALSE)
     If (HeapFree(hHeap, NULL, Cast(LPVOID, lpszTitle)) = FALSE) Then Return(FALSE)
     
-    ''unlock & destroy the heap
-    If (HeapUnlock(hHeap) = FALSE) Then Return(FALSE)
+    ''destroy the heap
     If (HeapDestroy(hHeap) = FALSE) Then Return(FALSE)
+    
+    ''restore cursor
+    SetCursor(hCurPrev)
     
     ''return
     SetLastError(ERROR_SUCCESS)
@@ -513,7 +528,19 @@ Private Function SetMainWndTitle (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, 
     
 End Function
 
+/'used to set up file access rights by MainProc
+    bReadOnly:BOOL      - File is read only?
+    dwAccess:DWORD32    - Buffer to fill with access rights.
+    dwShare:DWORD32     - Buffer to fill with sharing rights.
+'/
 Private Sub SetupFileRights (ByVal bReadOnly As BOOL, ByRef dwAccess As DWORD32, ByRef dwShare As DWORD32)
+    
+    #If __FB_DEBUG__
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
+        ? !"bReadOnly\t= "; bReadOnly
+        ? !"dwAccess\t= "; dwAccess
+        ? !"dwShare\t= "; dwShare
+    #EndIf
     
     If (bReadOnly = TRUE) Then
         dwAccess = GENERIC_READ
@@ -528,29 +555,31 @@ End Sub
 ''displays a system error message box and posts a quit message
 Private Sub FatalErrorProc (ByVal hDlg As HWND, ByVal dwErrCode As DWORD32)
     
+    #If __FB_DEBUG__
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
+        ? !"hDlg\t= 0x"; Hex(hDlg)
+        ? !"dwErrCode\t= 0x"; Hex(dwErrCode)
+    #EndIf
+    
     SysErrMsgBox(hDlg, dwErrCode)
     PostQuitMessage(dwErrCode)
     
 End Sub
 
 ''display the about message box
-Private Function AboutMsgBox (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As BOOL
+Private Function AboutMsgBox (ByVal hDlg As HWND) As BOOL
     
     #If __FB_DEBUG__
-        ? "Calling:", __FILE__; "/"; __FUNCTION__
-        ? !"hInst\t= 0x"; Hex(hInst)
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
         ? !"hDlg\t= 0x"; Hex(hDlg)
     #EndIf
     
-    ''set loading cursor
-    Dim hCursorPrev As HCURSOR = SetCursor(LoadCursor(NULL, IDC_WAIT))
+    ''set waiting cursor
+    Dim hCurPrev As HCURSOR = SetCursor(LoadCursor(NULL, IDC_WAIT))
     
     ''create a local heap
     Dim hHeap As HANDLE = HeapCreate(NULL, NULL, NULL)
     If (hHeap = INVALID_HANDLE_VALUE) Then Return(FALSE)
-    
-    ''get a lock on the heap
-    If (HeapLock(hHeap) = FALSE) Then Return(FALSE)
     
     ''allocate space for the unformatted strings
     Dim plpszUnformatted As LPTSTR Ptr
@@ -558,7 +587,7 @@ Private Function AboutMsgBox (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As B
     If (GetLastError()) Then Return(FALSE)
     
     ''load unformatted strings
-    SetLastError(Cast(DWORD32, LoadStringRange(hInst, plpszUnformatted, IDS_APPNAME, CCH_ABT, C_ABT)))
+    SetLastError(Cast(DWORD32, LoadStringRange(hInstance, plpszUnformatted, IDS_APPNAME, CCH_ABT, C_ABT)))
     If (GetLastError()) Then Return(FALSE)
     
     ''allocate space for the formatted string
@@ -580,7 +609,7 @@ Private Function AboutMsgBox (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As B
     With *lpMbp
         .cbSize         = SizeOf(MSGBOXPARAMS)
         .hwndOwner      = hDlg
-        .hInstance      = hInst
+        .hInstanceance      = hInstance
         .lpszText       = Cast(LPCTSTR, lpszFormatted)
         .lpszCaption    = Cast(LPCTSTR, plpszUnformatted[ABT_APPNAME])
         .dwStyle        = MB_USERICON
@@ -588,14 +617,14 @@ Private Function AboutMsgBox (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As B
         .dwLanguageId   = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
     End With
     
-    ''restore previous cursor
-    hCursorPrev = SetCursor(hCursorPrev)
+    ''restore cursor
+    hCurPrev = SetCursor(hCurPrev)
     
     ''display message box
     If (MessageBoxIndirect(lpMbp) <> IDOK) Then Return(FALSE)
     
-    ''set loading cursor
-    hCursorPrev = SetCursor(hCursorPrev)
+    ''set waiting cursor
+    hCurPrev = SetCursor(LoadCursor(NULL, IDC_WAIT))
     
     ''free memory
     If (HeapFree(hHeap, NULL, Cast(LPVOID, lpMbp)) = FALSE) Then Return(FALSE)
@@ -603,33 +632,8 @@ Private Function AboutMsgBox (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As B
     SetLastError(Cast(DWORD32, HeapFreePtrList(hHeap, Cast(LPVOID Ptr, plpszUnformatted), CB_ABT, C_ABT)))
     If (GetLastError()) Then Return(FALSE)
     
-    ''unlock & destroy the local heap
-    If (HeapUnlock(hHeap) = FALSE) Then Return(FALSE)
+    ''destroy the local heap
     If (HeapDestroy(hHeap) = FALSE) Then Return(FALSE)
-    
-    ''restore previous cursor
-    SetCursor(hCursorPrev)
-    
-    ''return
-    SetLastError(ERROR_SUCCESS)
-    Return(TRUE)
-    
-End Function
-
-''Initializes the main dialog's child windows
-Private Function InitMainChildren (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As BOOL
-    
-    #If __FB_DEBUG__
-        ? "Calling:", __FILE__; "/"; __FUNCTION__
-        ? !"hInst\t= 0x"; Hex(hInst)
-        ? !"hDlg\t= 0x"; Hex(hDlg)
-    #EndIf
-    
-    ''set a loading cursor
-    Dim hCurPrev As HCURSOR = SetCursor(LoadCursor(NULL, IDC_APPSTARTING))
-    
-    ''init child windows
-    If (InitMainListView(hInst, GetDlgItem(hDlg, IDC_LIV_MAIN)) = FALSE) Then Return(FALSE)
     
     ''restore cursor
     SetCursor(hCurPrev)
@@ -640,11 +644,33 @@ Private Function InitMainChildren (ByVal hInst As HINSTANCE, ByVal hDlg As HWND)
     
 End Function
 
-Private Function InitMainListView (ByVal hInst As HINSTANCE, ByVal hWnd As HWND) As BOOL
+''Initializes the main dialog's child windows
+Private Function InitMainChildren (ByVal hDlg As HWND) As BOOL
     
     #If __FB_DEBUG__
-        ? "Calling:", __FILE__; "/"; __FUNCTION__
-        ? !"hInst\t= 0x"; Hex(hInst)
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
+        ? !"hDlg\t= 0x"; Hex(hDlg)
+    #EndIf
+    
+    ''set a loading cursor
+    Dim hCurPrev As HCURSOR = SetCursor(LoadCursor(NULL, IDC_APPSTARTING))
+    
+    ''init child windows
+    If (InitMainListView(hInstance, GetDlgItem(hDlg, IDC_LIV_MAIN)) = FALSE) Then Return(FALSE)
+    
+    ''restore cursor
+    SetCursor(hCurPrev)
+    
+    ''return
+    SetLastError(ERROR_SUCCESS)
+    Return(TRUE)
+    
+End Function
+
+Private Function InitMainListView (ByVal hWnd As HWND) As BOOL
+    
+    #If __FB_DEBUG__
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
         ? !"hWnd\t= 0x"; Hex(hWnd)
     #EndIf
     
@@ -657,10 +683,9 @@ Private Function InitMainListView (ByVal hInst As HINSTANCE, ByVal hWnd As HWND)
     
     ''initialize the listview
     SendMessage(hWnd, WM_SETREDRAW, FALSE, NULL)
-    If (InitMainListViewColumns(hInst, hHeap, hWnd) = FALSE) Then Return(FALSE)
-    If (InitMainListViewItemNames(hInst, hHeap, hWnd) = FALSE) Then Return(FALSE)
+    If (InitMainListViewColumns(hInstance, hHeap, hWnd) = FALSE) Then Return(FALSE)
+    If (InitMainListViewItemNames(hInstance, hHeap, hWnd) = FALSE) Then Return(FALSE)
     SendMessage(hWnd, WM_SETREDRAW, TRUE, NULL)
-    SendMessage(hWnd, WM_VSCROLL, NULL, NULL)
     
     ''destroy the local heap
     If (HeapDestroy(hHeap) = FALSE) Then Return(FALSE)
@@ -671,11 +696,10 @@ Private Function InitMainListView (ByVal hInst As HINSTANCE, ByVal hWnd As HWND)
     
 End Function
 
-Private Function InitMainListViewColumns (ByVal hInst As HINSTANCE, ByVal hHeap As HANDLE, ByVal hWnd As HWND) As BOOL
+Private Function InitMainListViewColumns (ByVal hHeap As HANDLE, ByVal hWnd As HWND) As BOOL
     
     #If __FB_DEBUG__
-        ? "Calling:", __FILE__; "/"; __FUNCTION__
-        ? !"hInst\t= 0x"; Hex(hInst)
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
         ? !"hHeap\t= 0x"; Hex(hHeap)
         ? !"hWnd\t= 0x"; Hex(hWnd)
     #EndIf
@@ -689,7 +713,7 @@ Private Function InitMainListViewColumns (ByVal hInst As HINSTANCE, ByVal hHeap 
     If (GetLastError()) Then Return(FALSE)
     
     ''load the column headings
-    SetLastError(LoadStringRange(hInst, plpszHead, IDS_CHD_NAME, CCH_LVHD, C_LVHD))
+    SetLastError(LoadStringRange(hInstance, plpszHead, IDS_CHD_NAME, CCH_LVHD, C_LVHD))
     If (GetLastError()) Then Return(FALSE)
     
     ''allocate a column structure
@@ -734,11 +758,10 @@ Private Function InitMainListViewColumns (ByVal hInst As HINSTANCE, ByVal hHeap 
     
 End Function
 
-Private Function InitMainListViewItemNames (ByVal hInst As HINSTANCE, ByVal hHeap As HANDLE, ByVal hWnd As HWND) As BOOL
+Private Function InitMainListViewItemNames (ByVal hHeap As HANDLE, ByVal hWnd As HWND) As BOOL
     
     #If __FB_DEBUG__
-        ? "Calling:", __FILE__; "/"; __FUNCTION__
-        ? !"hInst\t= 0x"; Hex(hInst)
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
         ? !"hHeap\t= 0x"; Hex(hHeap)
         ? !"hWnd\t= 0x"; Hex(hWnd)
     #EndIf
@@ -752,7 +775,7 @@ Private Function InitMainListViewItemNames (ByVal hInst As HINSTANCE, ByVal hHea
     If (GetLastError()) Then Return(FALSE)
     
     ''load the listview items
-    SetLastError(LoadStringRange(hInst, plpszItem, IDS_LVI_VGMVER, CCH_LVITEM, C_LVITEM))
+    SetLastError(LoadStringRange(hInstance, plpszItem, IDS_LVI_VGMVER, CCH_LVITEM, C_LVITEM))
     If (GetLastError()) Then Return(FALSE)
     
     ''allocate space for a listview item
@@ -771,12 +794,6 @@ Private Function InitMainListViewItemNames (ByVal hInst As HINSTANCE, ByVal hHea
         pLvi->pszText   = plpszItem[iItem]
         If (SendMessage(hWnd, LVM_INSERTITEM, NULL, Cast(LPARAM, pLvi)) = -1) Then Return(FALSE)
     Next iItem
-    
-    'Dim szText As ZString*10 = "Test"
-    'pLvi->iItem = 0
-    'pLvi->iSubItem = 1
-    'pLvi->pszText = Cast(LPTSTR, @szText)
-    'If (SendMessage(hWnd, LVM_SETITEM, NULL, Cast(LPARAM, pLvi)) = FALSE) Then Return(FALSE)
     
     ''free listview item names and the item structure
     If (HeapFree(hHeap, NULL, Cast(LPVOID, pLvi)) = FALSE) Then Return(FALSE)

@@ -97,16 +97,6 @@
 #Define CCH_APPNAME             &h00000010 /'16'/
 #Define CB_APPNAME              Cast(SIZE_T, (CCH_APPNAME * SizeOf(TCHAR)))
 
-'''masks for registry I/O functions
-'#Define CFG_ALL                 &h00000000
-
-'''size of registry key names
-'#Define CCH_REGVAL              &h00000100 /'256'/
-'#Define CB_REGVAL               Cast(SIZE_T, (CCH_REGVAL * SizeOf(TCHAR)))
-'#Define C_REGVAL                &h00000002
-'#Define REGVAL_SHOWFULLPATH     &h00000000
-'#Define REGVAL_CUSTFILT         &h00000001
-
 ''size of listview headings
 #Define CCH_LVHD                &h00000100
 #Define CB_LVHD                 Cast(SIZE_T, (CCH_LVHD * SizeOf(TCHAR)))

@@ -46,7 +46,6 @@ Declare Function StartOptionsMenu (ByVal hInst As HINSTANCE, ByVal hDlg As HWND,
 Declare Function GenOptsProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPARAM, ByVal lParam As LPARAM) As LRESULT
 Declare Function LoadConfig (ByVal hInst As HINSTANCE, ByVal pOpts As OPTIONS Ptr, ByVal dwMask As DWORD32) As BOOL
 Declare Function LoadCfg_GenOpts (ByVal hInst As HINSTANCE, ByVal hHeap As HANDLE, ByVal hkProg As HKEY, ByVal pGenOpts As GEN_OPTS Ptr) As BOOL
-'Declare Function LoadAppName (ByVal hInst As HINSTANCE, ByVal hHeap As HANDLE, ByVal lpszAppName As LPTSTR) As BOOL
 Declare Function GetSubKeyCount (ByVal dwMask As DWORD32, ByVal pcSubKey As PULONG32) As BOOL
 Declare Function OpenProgHKey (ByVal hInst As HINSTANCE, ByVal phkOut As PHKEY, ByVal wAppName As WORD, ByVal samDesired As REGSAM, ByVal pdwDisp As PDWORD32) As BOOL
 

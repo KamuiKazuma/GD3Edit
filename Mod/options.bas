@@ -5,10 +5,10 @@
 '/
 
 #Include "header.bi"
+#Include "mod/heapptrlist/heapptrlist.bi"
 #Include "mod/errmsgbox/errmsgbox.bi"
-'#Include "mod/openproghkey/openproghkey.bi"
 
-Extern hInstance As HINSTANCE
+'Extern hInstance As HINSTANCE
 
 Public Function StartOptionsMenu (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, ByVal nStartPage As LONG32) As LRESULT
     
@@ -54,10 +54,7 @@ Public Function StartOptionsMenu (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, 
         .hInstance      = hInst
         .pszTemplate    = MAKEINTRESOURCE(IDD_GENOPTS)
         .pszIcon        = MAKEINTRESOURCE(IDI_WRENCH)
-        '.pszTitle       = NULL
         .pfnDlgProc     = @GenOptsProc
-        '.lParam         = NULL
-        '.pfnCallback    = NULL
     End With
     
     ''allocate space for the property sheet header
@@ -79,7 +76,6 @@ Public Function StartOptionsMenu (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, 
         .nPages         = OPT_C_PAGES
         .nStartPage     = nStartPage
         .ppsp           = Cast(LPCPROPSHEETPAGE, lpPsp)
-        '.pfnCallback    = NULL
     End With
     
     ''start the property sheet
@@ -101,7 +97,6 @@ End Function
 Private Function GenOptsProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPARAM, ByVal lParam As LPARAM) As LRESULT
     
     Static hwndPrsht As HWND
-    'Static bShowFullPaths As BOOL
     Static genOpts As GEN_OPTS
     
     Select Case uMsg
@@ -278,39 +273,15 @@ Private Function GetSubKeyCount (ByVal dwMask As DWORD32, ByVal pcSubKey As PULO
     If (dwMask And CFG_GENOPTS) Then *pcSubKey += OPT_C_SUBKEY_GEN
     If (dwMask And CFG_LVOPTS) Then *pcSubKey += OPT_C_SUBKEY_LV
     
+    #If __FB_DEBUG__
+        ? !"*pcSubKey\t= "; *pcSubKey
+    #EndIf
+    
     ''return
     SetLastError(ERROR_SUCCESS)
     Return(TRUE)
     
 End Function
-
-/'Private Function LoadAppName (ByVal hInst As HINSTANCE, ByVal hHeap As HANDLE, ByVal lpszAppName As LPTSTR) As BOOL
-    
-    #If __FB_DEBUG__
-        ? "Calling:", __FILE__; "\"; __FUNCTION__
-        ? !"hInst\t= 0x"; Hex(hInst)
-        ? !"hHeap\t= 0x"; Hex(hHeap)
-        ? !"lpszAppName\t= 0x"; Hex(lpszAppName)
-    #EndIf
-    
-    ''lock the heap
-    If (HeapLock(hHeap) = FALSE) Then Return(FALSE)
-    
-    ''allocate the app name
-    lpszAppName = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, CB_APPNAME))
-    If (lpszAppName = NULL) Then Return(FALSE)
-    
-    ''load the app name
-    If (LoadString(hInst, IDS_APPNAME, lpszAppName, CCH_APPNAME) = 0) Then Return(FALSE)
-    
-    ''unlock the heap
-    If (HeapUnlock(hHeap) = FALSE) Then Return(FALSE)
-    
-    ''return
-    SetLastError(ERROR_SUCCESS)
-    Return(TRUE)
-    
-End Function'/
 
 Private Function OpenProgHKey (ByVal hInst As HINSTANCE, ByVal phkOut As PHKEY, ByVal wAppName As WORD, ByVal samDesired As REGSAM, ByVal pdwDisp As PDWORD32) As BOOL
     
@@ -319,33 +290,9 @@ Private Function OpenProgHKey (ByVal hInst As HINSTANCE, ByVal phkOut As PHKEY, 
         ? !"hInst\t= 0x"; Hex(hInst)
         ? !"phkOut\t= 0x"; Hex(phkOut)
         ? !"wAppName\t= 0x"; Hex(wAppName)
-        /'? !"lpszAppName\t= 0x"; Hex(lpszAppName)
-        ? !"*lpszAppName\t= "; *lpszAppName
-        ? !"lpszClass\t= 0x"; Hex(lpszClass)
-        ? !"*lpszClass\t= "; *lpszClass'/
         ? !"samDesired\t= 0x"; Hex(samDesired)
         ? !"pdwDisp\t= 0x"; Hex(pdwDisp)
     #EndIf
-    
-    /' old version:
-    ''declare local variables
-    Dim hkSoftware As HKEY  ''hkey to HKEY_CURRENT_USER\"Software"
-    
-    ''open HKEY_CURRENT_USER\Software
-    SetLastError(Cast(DWORD32, RegOpenKeyEx(HKEY_CURRENT_USER, "Software", NULL, samDesired, @hkSoftware)))
-    If (GetLastError()) Then Return(FALSE)
-    
-    ''open/create HKEY_CURRENT_USER\"Software"\*lpszAppName
-    SetLastError(Cast(DWORD32, RegCreateKeyEx(hkSoftware, lpszAppName, NULL, NULL, NULL, samDesired, NULL, phkOut, pdwDisp)))
-    If (GetLastError()) Then Return(FALSE)
-    
-    ''close hkSoftware
-    SetLastError(Cast(DWORD32, RegCloseKey(hkSoftware)))
-    If (GetLastError()) Then Return(FALSE)
-    
-    ''return
-    SetLastError(ERROR_SUCCESS)
-    Return(TRUE)'/
     
     ''create a local heap
     Dim hHeap As HANDLE = HeapCreate(NULL, CB_APPNAME, CB_APPNAME)
