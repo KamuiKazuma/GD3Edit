@@ -37,9 +37,9 @@ IF EXIST ".\resource.rc" (
 REM Compile main module
 IF EXIST ".\main.bas" (
 	IF DEFINED FBDEBUG (
-		fbc -g ".\main.bas" ".\*.o" ".\resource.res" -x ".\GD3Edit.exe"
+		fbc -g -v ".\main.bas" ".\*.o" ".\resource.res" -x ".\GD3Edit.exe"
 	) ELSE (
-		fbc -s gui ".\main.bas" ".\*.o" ".\resource.res" -x ".\GD3Edit.exe"
+		fbc -s gui -v ".\main.bas" ".\*.o" ".\resource.res" -x ".\GD3Edit.exe"
 	)
 	IF NOT EXIST ".\GD3Edit.exe" (
 		SET ERRORLEVEL=2

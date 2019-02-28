@@ -8,9 +8,9 @@ REM 3 = Output folder not found
 
 IF EXIST %~f1 (
 	IF DEFINED FBDEBUG (
-		fbc -c -g %~f1
+		fbc -c -v -g %~f1
 	) ELSE (
-		fbc -c %~f1
+		fbc -c -v %~f1
 	)
 	
 	IF EXIST %~f2 (

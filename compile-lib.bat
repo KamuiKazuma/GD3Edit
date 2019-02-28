@@ -19,9 +19,9 @@ ECHO.
 REM compile library source file if it exists
 IF EXIST %~f1 (
 	IF DEFINED FBDEBUG (
-		fbc -g -lib %~f1 -x %~f2
+		fbc -lib -v -g %~f1 -x %~f2
 	) ELSE (
-		fbc -lib %~f1 -x %~f2
+		fbc -lib -v %~f1 -x %~f2
 	)
 	SET ERRORLEVEL=0
 ) ELSE (
