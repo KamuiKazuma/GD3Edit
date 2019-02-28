@@ -8,13 +8,11 @@
 #Include "mod/heapptrlist/heapptrlist.bi"
 #Include "mod/errmsgbox/errmsgbox.bi"
 
-'Extern hInstance As HINSTANCE
-
-Public Function StartOptionsMenu (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, ByVal nStartPage As LONG32) As LRESULT
+Public Function StartOptionsMenu (ByVal hDlg As HWND, ByVal nStartPage As LONG32) As LRESULT
     
     #If __FB_DEBUG__
         ? "Calling:", __FILE__; "/"; __FUNCTION__
-        ? !"hInst\t= 0x"; Hex(hInst)
+        ? !"hInstance\t= 0x"; Hex(hInstance)
         ? !"hDlg\t= 0x"; Hex(hDlg)
         ? !"nStartPage\t= "; nStartPage
     #EndIf
@@ -34,7 +32,7 @@ Public Function StartOptionsMenu (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, 
     #EndIf
     
     ''load the property sheet caption
-    If (LoadString(hInst, IDS_OPTIONS, lpszCaption, OPT_CCH_CAPTION) = 0) Then Return(GetLastError())
+    If (LoadString(hInstance, IDS_OPTIONS, lpszCaption, OPT_CCH_CAPTION) = 0) Then Return(GetLastError())
     #If __FB_DEBUG__
         ? !"*lpszCaption\t= "; *lpszCaption
     #EndIf
@@ -51,7 +49,7 @@ Public Function StartOptionsMenu (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, 
     With lpPsp[OPT_PG_GENOPTS]
         .dwSize         = SizeOf(PROPSHEETPAGE)
         .dwFlags        = PSP_USEICONID
-        .hInstance      = hInst
+        .hInstance      = hInstance
         .pszTemplate    = MAKEINTRESOURCE(IDD_GENOPTS)
         .pszIcon        = MAKEINTRESOURCE(IDI_WRENCH)
         .pfnDlgProc     = @GenOptsProc
@@ -70,7 +68,7 @@ Public Function StartOptionsMenu (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, 
         .dwSize         = SizeOf(PROPSHEETHEADER)
         .dwFlags        = (PSH_USEICONID Or PSH_PROPSHEETPAGE Or PSH_NOCONTEXTHELP Or PSH_HASHELP)
         .hwndParent     = hDlg
-        .hInstance      = hInst
+        .hInstance      = hInstance
         .pszIcon        = MAKEINTRESOURCE(IDI_WRENCH)
         .pszCaption     = Cast(LPCTSTR, lpszCaption)
         .nPages         = OPT_C_PAGES
@@ -97,13 +95,13 @@ End Function
 Private Function GenOptsProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPARAM, ByVal lParam As LPARAM) As LRESULT
     
     Static hwndPrsht As HWND
-    Static genOpts As GEN_OPTS
+    Static genOpts As OPTS_GEN
     
     Select Case uMsg
         Case WM_INITDIALOG
             
             Dim opts As OPTIONS
-            If (LoadConfig(hInstance, @opts, CFG_GENOPTS) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError))
+            If (LoadConfig(@opts, CFG_GENERAL) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError))
             genOpts = opts.general
             
         Case WM_COMMAND
@@ -172,31 +170,30 @@ Private Function GenOptsProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wP
     
 End Function
 
-Public Function LoadConfig (ByVal hInst As HINSTANCE, ByVal pOpts As OPTIONS Ptr, ByVal dwMask As DWORD32) As BOOL
+Public Function LoadConfig (ByVal pOpts As OPTIONS Ptr, ByVal dwMask As DWORD32) As LRESULT
     
     #If __FB_DEBUG__
         ? "Calling:", __FILE__; "\"; __FUNCTION__
-        ? !"hInst\t= 0x"; Hex(hInst)
         ? !"pOpts\t= 0x"; Hex(pOpts)
         ? !"dwMask\t= 0x"; Hex(dwMask)
     #EndIf
     
     ''create a local heap
     Dim cSubKey As ULONG32
-    If (GetSubKeyCount(dwMask, @cSubKey) = FALSE) Then Return(FALSE)
+    If (GetSubKeyCount(dwMask, @cSubKey) = FALSE) Then Return(GetLastError())
     Dim hHeap As HANDLE = HeapCreate(NULL, OPT_CB_SUBKEY, (OPT_CB_SUBKEY * cSubKey))
-    If (hHeap = INVALID_HANDLE_VALUE) Then Return(FALSE)
+    If (hHeap = INVALID_HANDLE_VALUE) Then Return(GetLastError())
     
     ''open app registry key
     Dim hkProg As HKEY
     Dim dwDisp As DWORD32
-    If (OpenProgHKey(hInst, @hkProg, IDS_APPNAME, KEY_READ, @dwDisp) = FALSE) Then Return(FALSE)
+    If (OpenProgHKey(@hkProg, IDS_APPNAME, KEY_READ, @dwDisp) = FALSE) Then Return(GetLastError())
     
     If (dwDisp = REG_OPENED_EXISTING_KEY) Then
         
         ''load information from the registry
-        If (dwMask And CFG_GENOPTS) Then
-            If (LoadCfg_GenOpts(hInst, hHeap, hkProg, @pOpts->general) = FALSE) Then Return(FALSE)
+        If (dwMask And CFG_GENERAL) Then
+            If (LoadCfg_GenOpts(hHeap, hkProg, @pOpts->general) = FALSE) Then Return(GetLastError())
         End If
         
     Else
@@ -207,18 +204,17 @@ Public Function LoadConfig (ByVal hInst As HINSTANCE, ByVal pOpts As OPTIONS Ptr
     
     ''close the registry key
     SetLastError(RegCloseKey(hkProg))
-    If (GetLastError()) Then Return(FALSE)
+    If (GetLastError()) Then Return(GetLastError())
     
     ''destroy the local heap
-    If (HeapDestroy(hHeap) = FALSE) Then Return(FALSE)
+    If (HeapDestroy(hHeap) = FALSE) Then Return(GetLastError())
     
     ''return
-    SetLastError(ERROR_SUCCESS)
-    Return(TRUE)
+    Return(ERROR_SUCCESS)
     
 End Function
 
-Private Function LoadCfg_GenOpts (ByVal hInst As HINSTANCE, ByVal hHeap As HANDLE, ByVal hkProg As HKEY, ByVal pGenOpts As GEN_OPTS Ptr) As BOOL
+Private Function LoadCfg_GenOpts (ByVal hHeap As HANDLE, ByVal hkProg As HKEY, ByVal pGenOpts As OPTS_GEN Ptr) As BOOL
     
     ''lock the heap
     If (HeapLock(hHeap) = FALSE) Then Return(FALSE)
@@ -229,7 +225,7 @@ Private Function LoadCfg_GenOpts (ByVal hInst As HINSTANCE, ByVal hHeap As HANDL
     If (GetLastError()) Then Return(FALSE)
     
     ''load the sub-key names
-    SetLastError(LoadStringRange(hInst, plpszSubKey, IDS_REG_SHOWFULLPATH, OPT_CCH_SUBKEY, OPT_C_SUBKEY_GEN))
+    SetLastError(LoadStringRange(hInstance, plpszSubKey, IDS_REG_SHOWFULLPATH, OPT_CCH_SUBKEY, OPT_C_SUBKEY_GEN))
     If (GetLastError()) Then Return(FALSE)
     
     ''read from the registry
@@ -270,8 +266,8 @@ Private Function GetSubKeyCount (ByVal dwMask As DWORD32, ByVal pcSubKey As PULO
     If (*pcSubKey <> 0) Then ZeroMemory(pcSubKey, SizeOf(ULONG32))
     
     ''add up sub-keys
-    If (dwMask And CFG_GENOPTS) Then *pcSubKey += OPT_C_SUBKEY_GEN
-    If (dwMask And CFG_LVOPTS) Then *pcSubKey += OPT_C_SUBKEY_LV
+    If (dwMask And CFG_GENERAL) Then *pcSubKey += OPT_C_SUBKEY_GEN
+    If (dwMask And CFG_LVHEAD) Then *pcSubKey += OPT_C_SUBKEY_LVHEAD
     
     #If __FB_DEBUG__
         ? !"*pcSubKey\t= "; *pcSubKey
@@ -283,11 +279,10 @@ Private Function GetSubKeyCount (ByVal dwMask As DWORD32, ByVal pcSubKey As PULO
     
 End Function
 
-Private Function OpenProgHKey (ByVal hInst As HINSTANCE, ByVal phkOut As PHKEY, ByVal wAppName As WORD, ByVal samDesired As REGSAM, ByVal pdwDisp As PDWORD32) As BOOL
+Private Function OpenProgHKey (ByVal phkOut As PHKEY, ByVal wAppName As WORD, ByVal samDesired As REGSAM, ByVal pdwDisp As PDWORD32) As BOOL
     
     #If __FB_DEBUG__
         ? "Calling:", __FILE__; "\"; __FUNCTION__
-        ? !"hInst\t= 0x"; Hex(hInst)
         ? !"phkOut\t= 0x"; Hex(phkOut)
         ? !"wAppName\t= 0x"; Hex(wAppName)
         ? !"samDesired\t= 0x"; Hex(samDesired)
@@ -303,7 +298,7 @@ Private Function OpenProgHKey (ByVal hInst As HINSTANCE, ByVal phkOut As PHKEY, 
     If (lpszAppName = NULL) Then Return(FALSE)
     
     ''load the app name
-    If (LoadString(hInst, wAppName, lpszAppName, CCH_APPNAME) = 0) Then Return(FALSE)
+    If (LoadString(hInstance, wAppName, lpszAppName, CCH_APPNAME) = 0) Then Return(FALSE)
     
     ''open hkey to HKEY_CURRENT_USER\Software
     Dim hkSoftware As HKEY

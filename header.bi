@@ -63,7 +63,7 @@ Declare Function StartMainDlg (ByVal nShowCmd As INT32, ByVal lParam As LPARAM) 
 ''main dialog procedure
 Declare Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPARAM, ByVal lParam As LPARAM) As LRESULT
 
-Declare Function CreateMainChildren (ByVal hInst As HINSTANCE, ByVal hDlg As HWND) As BOOL
+Declare Function CreateMainChildren (ByVal hDlg As HWND) As BOOL
 
 ''EnumChidWindows proc for resizing the main dialog 
 Declare Function ResizeMainChildren (ByVal hWnd As HWND, ByVal lParam As LPARAM) As BOOL
