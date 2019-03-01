@@ -35,40 +35,46 @@ LANGUAGE 9, 1
 #define IDS_SIGNATURE           0x0007 //7
 #define IDS_OPTIONS             0x0008 //8
 
-#define IDS_LVI_VGMVER          0x0100 //256
-#define IDS_LVI_LOOPBASE        0x0101 //257
-#define IDS_LVI_LOOPMOD         0x0102 //258
-#define IDS_LVI_LOOPSAMPLES     0x0103 //259
-#define IDS_LVI_TOTALSAMPLES    0x0104 //260
-#define IDS_LVI_VOLMOD          0x0105 //261
-#define IDS_LVI_RATE            0x0106 //262
-#define IDS_LVI_EOFOFF          0x0107 //263
-#define IDS_LVI_GD3OFF          0x0108 //264
+#define IDS_LVI_HEAD_VGMVER     0x0100 //256
+#define IDS_LVI_HEAD_LOOPBASE   0x0101 //257
+#define IDS_LVI_HEAD_LOOPMOD    0x0102 //258
+#define IDS_LVI_HEAD_LOOPSAMP   0x0103 //259
+#define IDS_LVI_HEAD_TOTALSAMP  0x0104 //260
+#define IDS_LVI_HEAD_VOLMOD     0x0105 //261
+#define IDS_LVI_HEAD_RATE       0x0106 //262
+#define IDS_LVI_HEAD_EOFOFF     0x0107 //263
+#define IDS_LVI_HEAD_GD3OFF     0x0108 //264
 
-#define IDS_CHD_NAME            0x0200 //512
-#define IDS_CHD_VALUE           0x0201 //513
-#define IDS_CHD_VALUEHEX        0x0202 //514
+#define IDS_LVH_HEAD_NAME       0x0200 //512
+#define IDS_LVH_HEAD_VALUE      0x0201 //513
+#define IDS_LVH_HEAD_VALUEHEX   0x0202 //514
 
 #define IDS_MSG_UNSAVED         0x0300 //768
+#define IDS_MSG_UIUPFAIL        0x0301 //769
+#define IDS_MSG_UIINITFAIL      0x0302 //770
 
 #define IDS_REG_SHOWFULLPATH    0x0400 //1024
 #define IDS_REG_CUSTFILT        0x0401 //1025
+#define IDS_REG_LVHEAD          0x0402 //1026
+#define IDS_REG_LVHEAD_COL1     0x0403 //1027
+#define IDS_REG_LVHEAD_COL2     0x0404 //1028
+#define IDS_REG_LVHEAD_COL3     0x0405 //1029
 
 #define IDS_FILTER              0x0500 //1280
 
 //define property sheet sizes because GoRC doesn't seem to include these definitions by default.
-#define PROP_SM_CXDLG               0x00D4 //212
-#define PROP_SM_CYDLG               0x00BC //188
-#define PROP_MED_CXDLG              0x00E3 //227
-#define PROP_MED_CYDLG              0x00D7 //215
-#define PROP_LG_CXDLG               0x00FC //252
-#define PROP_LG_CYDLG               0x00DA //218
+#define PROP_SM_CXDLG           0x00D4 //212
+#define PROP_SM_CYDLG           0x00BC //188
+#define PROP_MED_CXDLG          0x00E3 //227
+#define PROP_MED_CYDLG          0x00D7 //215
+#define PROP_LG_CXDLG           0x00FC //252
+#define PROP_LG_CYDLG           0x00DA //218
 
 IDR_VERSIONINFO VERSIONINFO
-FILEVERSION     1, 0, 0, 77
-PRODUCTVERSION  1, 0, 0, 62
+FILEVERSION     1, 0, 0, 91
+PRODUCTVERSION  1, 0, 0, 64
 FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
-FILEFLAGS       VS_FF_DEBUG | VS_FF_PRIVATEBUILD | VS_FF_SPECIALBUILD
+FILEFLAGS       VS_FF_PRIVATEBUILD | VS_FF_SPECIALBUILD //VS_FF_DEBUG
 FILEOS          VOS_NT_WINDOWS32
 FILETYPE        VFT_APP
 FILESUBTYPE     0
@@ -77,8 +83,8 @@ BEGIN
     BEGIN
         BLOCK "04090000"
         BEGIN
-            VALUE "FileVersion",        "1.0.0.77\0"
-            VALUE "ProductVersion",     "1.0.0.62\0"
+            VALUE "FileVersion",        "1.0.0.91\0"
+            VALUE "ProductVersion",     "1.0.0.64\0"
             VALUE "CompanyName",        "Kazusoft Co.\0"
             VALUE "LegalCopyright",     "Copyright (c) 2019 Kazusoft Co.\0"
             VALUE "LegalTrademarks",    "Kazusoft Co. and the Kazusoft logo are Trademarks of Lisa Murray\0"
@@ -86,8 +92,8 @@ BEGIN
             VALUE "InternalName",       "GD3Edit\0"
             VALUE "OriginalFilename",   "GD3Edit.exe\0"
             VALUE "ProductName",        "GD3Edit\0"
-            VALUE "PrivateBuild",       "Built by Lisa for debugging property sheet pages.\0"
-            VALUE "SpecialBuild",       "Debug Build\0"
+            VALUE "PrivateBuild",       "Built by Lisa for beta testing.\0"
+            VALUE "SpecialBuild",       "Beta Build\0"
         END
     END
     BLOCK "VarFileInfo"
@@ -130,7 +136,7 @@ BEGIN
         MENUITEM "&Save", IDM_SAVE, MFT_STRING, MFS_DISABLED
         MENUITEM "Save &As", IDM_SAVEAS, MFT_STRING, MFS_DISABLED
         MENUITEM SEPARATOR
-        MENUITEM "&Close", IDM_CLOSE, MFT_STRING, MFS_DISABLED
+        MENUITEM "&Close", IDM_CLOSE, MFT_STRING, MFS_ENABLED
         MENUITEM SEPARATOR
         MENUITEM "E&xit", IDM_EXIT, MFT_STRING, MFS_ENABLED
         MENUITEM SEPARATOR
@@ -150,21 +156,27 @@ BEGIN
     IDS_COMPILER            "\nCompiler Information:"
     IDS_SIGNATURE           "\nSignature:\t\t"
     IDS_OPTIONS             "GD3Edit Options"
-    IDS_LVI_VGMVER          "VGM Version\0"
-    IDS_LVI_LOOPBASE        "Loop Base\0"
-    IDS_LVI_LOOPMOD         "Loop Modifier\0"
-    IDS_LVI_LOOPSAMPLES     "Loop Samples\0"
-    IDS_LVI_TOTALSAMPLES    "Total Samples\0"
-    IDS_LVI_VOLMOD          "Volume Modifier\0"
-    IDS_LVI_RATE            "Rate\0"
-    IDS_LVI_EOFOFF          "End of File Offset\0"
-    IDS_LVI_GD3OFF          "GD3 Tag Offset\0"
-    IDS_CHD_NAME            "Name\0"
-    IDS_CHD_VALUE           "Value\0"
-    IDS_CHD_VALUEHEX        "Value (Hex)\0"
+    IDS_LVI_HEAD_VGMVER     "VGM Version\0"
+    IDS_LVI_HEAD_LOOPBASE   "Loop Base\0"
+    IDS_LVI_HEAD_LOOPMOD    "Loop Modifier\0"
+    IDS_LVI_HEAD_LOOPSAMP   "Loop Samples\0"
+    IDS_LVI_HEAD_TOTALSAMP  "Total Samples\0"
+    IDS_LVI_HEAD_VOLMOD     "Volume Modifier\0"
+    IDS_LVI_HEAD_RATE       "Rate\0"
+    IDS_LVI_HEAD_EOFOFF     "End of File Offset\0"
+    IDS_LVI_HEAD_GD3OFF     "GD3 Tag Offset\0"
+    IDS_LVH_HEAD_NAME       "Name\0"
+    IDS_LVH_HEAD_VALUE      "Value\0"
+    IDS_LVH_HEAD_VALUEHEX   "Value (Hex)\0"
     IDS_MSG_UNSAVED         "There are unsaved changes in the current file that will be lost if you don't save them.\nWould you like to save them now?"
+    IDS_MSG_UIUPFAIL        "Failed to update the UI."
+    IDS_MSG_UIINITFAIL      "Failed to initialize the UI."
     IDS_REG_SHOWFULLPATH    "Show Full Path in Title Bar"
     IDS_REG_CUSTFILT        "Custom File Filter"
+    IDS_REG_LVHEAD          "VGM Header Listview"
+    IDS_REG_LVHEAD_COL1     "Name Column Width"
+    IDS_REG_LVHEAD_COL2     "Value Column Width"
+    IDS_REG_LVHEAD_COL3     "Hex Value Column Width"
     IDS_FILTER              "VGM Files (*.VGM)\0*.VGM\0All Files\0*.*\0\0"
 END
 

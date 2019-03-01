@@ -105,4 +105,11 @@ Declare Function InitMainListView (ByVal hWnd As HWND) As BOOL
 Declare Function InitMainListViewColumns (ByVal hHeap As HANDLE, ByVal hWnd As HWND) As BOOL
 Declare Function InitMainListViewItemNames (ByVal hHeap As HANDLE, ByVal hWnd As HWND) As BOOL
 
+/'  Translates a BCD-code version number into an useable string.
+    dwBcdCode:DWORD32   -   The input BCD-code version number.
+    lpszVer:LPTSTR      -   Pointer to a string to recieve the generated
+                            string.
+'/
+Declare Function TranslateBcdCodeVer (ByVal dwBcdCode As DWORD32, ByVal lpszVer As LPTSTR) As BOOL
+
 ''EOF

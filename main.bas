@@ -7,7 +7,7 @@
     Created with Kazusoft's Dialog App Template v2.4
     
     compile with:
-        fbc -s gui "main.bas" "resource.res" -x "GD3Edit.exe"
+        fbc -s gui "main.bas" "*.o" "resource.res" -x "GD3Edit.exe"
     
 '/
 
@@ -59,10 +59,10 @@ Function WinMain (ByVal hInst As HINSTANCE, ByVal hInstPrev As HINSTANCE, ByVal 
         ? !"nShowCmd\t= 0x"; hex(nShowCmd)
     #EndIf
     
-    If (InitClasses(hInst) = FALSE) Then Return(GetLastError())
+    If (InitClasses() = FALSE) Then Return(GetLastError())
     
     ''start the main dialog
-    If (StartMainDlg(hInst, nShowCmd, NULL) = FALSE) Then Return(GetLastError())
+    If (StartMainDlg(nShowCmd, NULL) = FALSE) Then Return(GetLastError())
     
     ''start message loop
     Dim msg As MSG
@@ -106,7 +106,7 @@ Private Function InitClasses () As BOOL
         .lpfnWndProc    = @MainProc
         .cbClsExtra     = 0
         .cbWndExtra     = DLGWINDOWEXTRA
-        .hInstance      = hInst
+        .hInstance      = hInstance
         .hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_GD3TAG))
         .hCursor        = LoadCursor(NULL, IDC_ARROW)
         .hbrBackground  = Cast(HBRUSH, (COLOR_BTNFACE + 1))
@@ -166,7 +166,7 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
             ''set program's icon
             SendMessage(hWnd, WM_SETICON, NULL, Cast(LPARAM, LoadIcon(hInstance, MAKEINTRESOURCE(IDI_GD3TAG))))
             
-            If (CreateMainChildren(hInstance, hWnd) = FALSE) Then FatalErrorProc(hWnd, GetLastError())
+            If (CreateMainChildren(hWnd) = FALSE) Then FatalErrorProc(hWnd, GetLastError())
             
             ''create a heap for the file name info
             hFni = HeapCreate(NULL, SizeOf(FILENAMEINFO), SizeOf(FILENAMEINFO))
@@ -190,7 +190,13 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
             
         Case WM_INITDIALOG
             
-            If (InitMainChildren(hInstance, hWnd) = FALSE) Then FatalErrorProc(hWnd, GetLastError())
+            If (InitMainChildren(hWnd) = FALSE) Then
+                If (GetLastError() = ERROR_SUCCESS) Then 
+                    ProgMsgBox(hInstance, hWnd, IDS_MSG_UIINITFAIL, IDS_APPNAME, MB_ICONERROR)
+                Else
+                    FatalErrorProc(hWnd, GetLastError())
+                End If
+            End If
             
         Case WM_CLOSE
             
@@ -206,10 +212,10 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
                             If (HeapLock(hFni) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
                             
                             ''open browse dialog box
-                            If (BrowseForFile(hInstance, hWnd, @fni) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
+                            If (BrowseForFile(hWnd, @fni) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
                             
                             ''update title bar
-                            If (SetMainWndTitle(hInstance, hWnd, Cast(LPCTSTR, fni.lpszFileTitle)) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
+                            If (SetMainWndTitle(hWnd, Cast(LPCTSTR, fni.lpszFileTitle)) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
                             
                             ''setup access and sharing rights
                             Dim As DWORD32 dwAccess, dwShare
@@ -229,6 +235,16 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
                             ''unlock the file name heap
                             If (HeapUnlock(hFni) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
                             
+                            Dim lvi As LVITEM
+                            lvi.mask = LVIF_TEXT
+                            lvi.iItem = 0
+                            lvi.iSubItem = 1
+                            Dim szVer As ZString*12
+                            If (TranslateBcdCodeVer(vgmHead.dwVersion, Cast(LPTSTR, @szVer)) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
+                            'szVer = "1.60"
+                            lvi.pszText = Cast(LPTSTR, @szVer)
+                            If (SendMessage(GetDlgItem(hWnd, IDC_LIV_MAIN), LVM_SETITEM, NULL, Cast(LPARAM, @lvi)) = FALSE) Then ProgMsgBox(hInstance, hWnd, IDS_MSG_UIUPFAIL, IDS_APPNAME, MB_ICONERROR)
+                            
                             ''update UI
                             '#If __FB_DEBUG__
                             '    ? !"fccVGM\t= "; Hex(vgmHead.fccVGM, 8)
@@ -241,18 +257,31 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
                             
                         Case IDM_CLOSE
                             
+                            Select Case ProgMsgBox(hInstance, hWnd, IDS_MSG_UNSAVED, IDS_APPNAME, MB_ICONWARNING Or MB_YESNOCANCEL)
+                                Case IDYES
+                                    ''save file
+                                    ''clear the UI
+                                    If (SetMainWndTitle(hWnd, NULL) = FALSE) Then SysErrMsgBox(hWnd, GetLastError())
+                                Case IDNO
+                                    ''don't save the file
+                                    ''clear the UI
+                                    If (SetMainWndTitle(hWnd, NULL) = FALSE) Then SysErrMsgBox(hWnd, GetLastError())
+                                Case IDCANCEL
+                                    ''do nothing
+                            End Select
+                            
                         Case IDM_EXIT
                             
                             SendMessage(hWnd, WM_CLOSE, NULL, NULL)
                             
                         Case IDM_OPTIONS
                             
-                            SetLastError(StartOptionsMenu(hInstance, hWnd, 0))
+                            SetLastError(StartOptionsMenu(hWnd, OPT_PG_GENERAL))
                             If (GetLastError()) Then SysErrMsgBox(hWnd, GetLastError())
                             
                         Case IDM_ABOUT
                             
-                            If (AboutMsgBox(hInstance, hWnd) = FALSE) Then SysErrMsgBox(hWnd, GetLastError())
+                            If (AboutMsgBox(hWnd) = FALSE) Then SysErrMsgBox(hWnd, GetLastError())
                             
                     End Select
                     
@@ -609,7 +638,7 @@ Private Function AboutMsgBox (ByVal hDlg As HWND) As BOOL
     With *lpMbp
         .cbSize         = SizeOf(MSGBOXPARAMS)
         .hwndOwner      = hDlg
-        .hInstanceance      = hInstance
+        .hInstance      = hInstance
         .lpszText       = Cast(LPCTSTR, lpszFormatted)
         .lpszCaption    = Cast(LPCTSTR, plpszUnformatted[ABT_APPNAME])
         .dwStyle        = MB_USERICON
@@ -656,7 +685,7 @@ Private Function InitMainChildren (ByVal hDlg As HWND) As BOOL
     Dim hCurPrev As HCURSOR = SetCursor(LoadCursor(NULL, IDC_APPSTARTING))
     
     ''init child windows
-    If (InitMainListView(hInstance, GetDlgItem(hDlg, IDC_LIV_MAIN)) = FALSE) Then Return(FALSE)
+    If (InitMainListView(GetDlgItem(hDlg, IDC_LIV_MAIN)) = FALSE) Then Return(FALSE)
     
     ''restore cursor
     SetCursor(hCurPrev)
@@ -675,7 +704,7 @@ Private Function InitMainListView (ByVal hWnd As HWND) As BOOL
     #EndIf
     
     ''create a local heap
-    Dim hHeap As HANDLE = HeapCreate(NULL, NULL, (((CB_LVHD * C_LVHD) + SizeOf(LVCOLUMN)) + ((CB_LVITEM * C_LVITEM) + SizeOf(LVITEM))))
+    Dim hHeap As HANDLE = HeapCreate(NULL, NULL, (((CB_LVH_HEAD * C_LVH_HEAD) + SizeOf(LVCOLUMN)) + ((CB_LVI_HEAD * C_LVI_HEAD) + SizeOf(LVITEM))))
     If (hHeap = INVALID_HANDLE_VALUE) Then Return(FALSE)
     #If __FB_DEBUG__
         ? !"hHeap\t= 0x"; Hex(hHeap)
@@ -683,8 +712,8 @@ Private Function InitMainListView (ByVal hWnd As HWND) As BOOL
     
     ''initialize the listview
     SendMessage(hWnd, WM_SETREDRAW, FALSE, NULL)
-    If (InitMainListViewColumns(hInstance, hHeap, hWnd) = FALSE) Then Return(FALSE)
-    If (InitMainListViewItemNames(hInstance, hHeap, hWnd) = FALSE) Then Return(FALSE)
+    If (InitMainListViewColumns(hHeap, hWnd) = FALSE) Then Return(FALSE)
+    If (InitMainListViewItemNames(hHeap, hWnd) = FALSE) Then Return(FALSE)
     SendMessage(hWnd, WM_SETREDRAW, TRUE, NULL)
     
     ''destroy the local heap
@@ -709,11 +738,11 @@ Private Function InitMainListViewColumns (ByVal hHeap As HANDLE, ByVal hWnd As H
     
     ''allocate space for column headings
     Dim plpszHead As LPTSTR Ptr
-    SetLastError(HeapAllocPtrList(hHeap, Cast(LPVOID Ptr, plpszHead), CB_LVHD, C_LVHD))
+    SetLastError(HeapAllocPtrList(hHeap, Cast(LPVOID Ptr, plpszHead), CB_LVH_HEAD, C_LVH_HEAD))
     If (GetLastError()) Then Return(FALSE)
     
     ''load the column headings
-    SetLastError(LoadStringRange(hInstance, plpszHead, IDS_CHD_NAME, CCH_LVHD, C_LVHD))
+    SetLastError(LoadStringRange(hInstance, plpszHead, IDS_LVH_HEAD_NAME, CCH_LVH_HEAD, C_LVH_HEAD))
     If (GetLastError()) Then Return(FALSE)
     
     ''allocate a column structure
@@ -727,7 +756,7 @@ Private Function InitMainListViewColumns (ByVal hHeap As HANDLE, ByVal hWnd As H
     pLvc->mask  = (LVCF_FMT Or LVCF_WIDTH Or LVCF_TEXT Or LVCF_SUBITEM)
     pLvc->cx    = 100 ''this number might need to be changed later
     
-    For iCol As INT32 = 0 To (C_LVHD - 1)
+    For iCol As INT32 = 0 To (C_LVH_HEAD - 1)
         #If __FB_DEBUG__
             ? !"iCol\t= "; iCol
         #EndIf
@@ -746,7 +775,7 @@ Private Function InitMainListViewColumns (ByVal hHeap As HANDLE, ByVal hWnd As H
     
     ''free the column structure & headings
     If (HeapFree(hHeap, NULL, Cast(LPVOID, pLvc)) = FALSE) Then Return(FALSE)
-    SetLastError(HeapFreePtrList(hHeap, Cast(LPVOID Ptr, plpszHead), CB_LVHD, C_LVHD))
+    SetLastError(HeapFreePtrList(hHeap, Cast(LPVOID Ptr, plpszHead), CB_LVH_HEAD, C_LVH_HEAD))
     If (GetLastError()) Then Return(FALSE)
     
     ''unlock the heap
@@ -771,11 +800,11 @@ Private Function InitMainListViewItemNames (ByVal hHeap As HANDLE, ByVal hWnd As
     
     ''allocate space for listview items
     Dim plpszItem As LPTSTR Ptr
-    SetLastError(HeapAllocPtrList(hHeap, Cast(LPVOID Ptr, plpszItem), CB_LVITEM, C_LVITEM))
+    SetLastError(HeapAllocPtrList(hHeap, Cast(LPVOID Ptr, plpszItem), CB_LVI_HEAD, C_LVI_HEAD))
     If (GetLastError()) Then Return(FALSE)
     
     ''load the listview items
-    SetLastError(LoadStringRange(hInstance, plpszItem, IDS_LVI_VGMVER, CCH_LVITEM, C_LVITEM))
+    SetLastError(LoadStringRange(hInstance, plpszItem, IDS_LVI_HEAD_VGMVER, CCH_LVI_HEAD, C_LVI_HEAD))
     If (GetLastError()) Then Return(FALSE)
     
     ''allocate space for a listview item
@@ -786,7 +815,7 @@ Private Function InitMainListViewItemNames (ByVal hHeap As HANDLE, ByVal hWnd As
     #EndIf
     
     pLvi->mask = LVIF_TEXT
-    For iItem As INT32 = 0 To (C_LVITEM - 1)
+    For iItem As INT32 = 0 To (C_LVI_HEAD - 1)
         #If __FB_DEBUG__
             ? !"iItem\t="; iItem
         #EndIf
@@ -797,11 +826,88 @@ Private Function InitMainListViewItemNames (ByVal hHeap As HANDLE, ByVal hWnd As
     
     ''free listview item names and the item structure
     If (HeapFree(hHeap, NULL, Cast(LPVOID, pLvi)) = FALSE) Then Return(FALSE)
-    SetLastError(HeapFreePtrList(hHeap, Cast(LPVOID Ptr, plpszItem), CB_LVITEM, C_LVITEM))
+    SetLastError(HeapFreePtrList(hHeap, Cast(LPVOID Ptr, plpszItem), CB_LVI_HEAD, C_LVI_HEAD))
     If (GetLastError()) Then Return(FALSE)
     
     ''unlock the heap
     If (HeapUnlock(hHeap) = FALSE) Then Return(FALSE)
+    
+    ''return
+    SetLastError(ERROR_SUCCESS)
+    Return(TRUE)
+    
+End Function
+
+Private Function TranslateBcdCodeVer (ByVal dwBcdCode As DWORD32, ByVal lpszVer As LPTSTR) As BOOL
+    
+    #If __FB_DEBUG__
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
+        ? !"dwBcdCode\t= 0x"; Hex(dwBcdCode)
+        ? !"lpszVer\t= 0x"; Hex(lpszVer)
+    #EndIf
+    
+    /' Heap Sizes:
+        /'  Min:
+            Bytes of dwBcdCode: (4 * SizeOf(UByte))
+        '/
+        /'  Max:
+            Bytes of dwBcdCode: (4 * SizeOf(UByte))
+            String representations of bytes in dwBcdCode: (4 * (2 * SizeOf(TCHAR)))
+            Output string: (11 * SizeOf(TCHAR))
+            Total = (4 * SizeOf(UByte)) + (4 * (2 * SizeOf(TCHAR))) =
+            4 + (8 * SizeOf(TCHAR)) 
+        '/
+    '/
+    
+    ''create a local heap
+    Dim hHeap As HANDLE = HeapCreate(NULL, (4 * SizeOf(UByte)), NULL)
+    If (hHeap = INVALID_HANDLE_VALUE) Then Return(FALSE)
+    #If __FB_DEBUG__
+        ? __FUNCTION__; !"\\hHeap\t= 0x"; Hex(hHeap)
+    #EndIf
+    
+    ''get sub version numbers
+    Dim pubSubVer As UByte Ptr = Cast(UByte Ptr, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, (4 * SizeOf(UByte))))
+    If (pubSubVer = NULL) Then Return(FALSE)
+    pubSubVer[0] = HiWord(HiByte(dwBcdCode))
+    pubSubVer[1] = HiWord(LoByte(dwBcdCode))
+    pubSubVer[2] = LoWord(HiByte(dwBcdCode))
+    pubSubVer[3] = LoWord(LoByte(dwBcdCode))
+    #If __FB_DEBUG__
+        ? __FUNCTION__; !"\\pubSubVer\t= 0x"; Hex(pubSubVer)
+    #EndIf
+    
+    ''figure out how large the version number should be
+    Dim cSubVer As INT32    ''number of sub version numbers
+    For iSubVer As INT32 = 3 To 0 Step -1
+        
+        ''add up sub version numbers that are non-zero
+        If (pubSubVer[iSubVer] > 0) Then
+            cSubVer += 1
+        Else
+            Exit For
+        End If
+    Next iSubVer
+    
+    ''format output string
+    For iSubVer As INT32 = 3 To cSubVer Step -1
+        
+        ''exclude the "." separator on the last sub version number
+        If (iSubVer = cSubVer) Then
+            *lpszVer = (Hex(pubSubVer[iSubVer]) + *lpszVer)
+        Else
+            *lpszVer = ("." + Hex(pubSubVer[iSubVer]) + *lpszVer)
+        End If
+        
+        #If __FB_DEBUG__
+            ? __FUNCTION__; "\*lpszVer\t= "; *lpszVer
+        #EndIf
+        
+    Next iSubVer
+    If (HeapFree(hHeap, NULL, Cast(LPVOID, pubSubVer)) = FALSE) Then Return(FALSE)
+    
+    ''destroy the local heap
+    If (HeapDestroy(hHeap) = FALSE) Then Return(FALSE)
     
     ''return
     SetLastError(ERROR_SUCCESS)
