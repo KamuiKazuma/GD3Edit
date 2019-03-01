@@ -46,7 +46,7 @@ Public Function StartOptionsMenu (ByVal hDlg As HWND, ByVal nStartPage As LONG32
     #EndIf
     
     ''setup general options page
-    With lpPsp[OPT_PG_GENOPTS]
+    With lpPsp[OPT_PG_GENERAL]
         .dwSize         = SizeOf(PROPSHEETPAGE)
         .dwFlags        = PSP_USEICONID
         .hInstance      = hInstance
@@ -177,6 +177,12 @@ Public Function LoadConfig (ByVal pOpts As OPTIONS Ptr, ByVal dwMask As DWORD32)
         ? !"pOpts\t= 0x"; Hex(pOpts)
         ? !"dwMask\t= 0x"; Hex(dwMask)
     #EndIf
+    
+    ''make sure pOpts is a valid pointer
+    If (pOpts = NULL) Then Return(ERROR_INVALID_PARAMETER)
+    
+    ''make sure we have a valid mask
+    If (dwMask = NULL) Then Return(ERROR_INVALID_PARAMETER)
     
     ''create a local heap
     Dim cSubKey As ULONG32
