@@ -1,8 +1,12 @@
-# ignore compiled and project files
+# Ignore binaries
 *.exe
 *.dll
 *.res
 *.obj
 *.o
 *.a
+
+# Ignore FBEdit project files
 *.fbp
+
+# EOF
