@@ -1,3 +1,6 @@
+AUTHORS.TXT
 
+GD3Edit Development Staff:
+    Lisa Murray - Programmer & Designer.
 
 EOF

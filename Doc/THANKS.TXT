@@ -1,3 +1,8 @@
+THANKS.TXT
 
+GD3Edit Special Thanks:
+    Valley Bell         - VGM header importer help.
+    Persephone A. Vine  - Morale support & beta testing.
+    Celeste/Aero/Ceres  - Morale support.
 
 EOF
