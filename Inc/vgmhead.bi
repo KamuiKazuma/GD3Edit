@@ -221,4 +221,12 @@ Declare Function PrepareHeader (ByVal pVgmHead As VGM_HEADER Ptr) As BOOL
 Declare Function MakeOffsetsAddresses (ByVal pVgmHead As VGM_HEADER Ptr) As BOOL
 Declare Function MakeAddressesOffsets (ByVal pVgmHead As VGM_HEADER Ptr) As BOOL
 
+/'  Translates a BCD-code version number into an useable string.
+    dwBcdCode:DWORD32   -   The input BCD-code version number.
+    lpszVer:LPTSTR      -   Pointer to a string to recieve the generated
+                            string.
+'/
+Declare Function TranslateBcdCodeVer (ByVal dwBcdCode As DWORD32, ByVal lpszVer As LPTSTR) As BOOL
+
+
 ''EOF

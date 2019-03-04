@@ -81,6 +81,7 @@
 #Define IDS_LVI_HEAD_RATE       &h0106
 #Define IDS_LVI_HEAD_EOFOFF     &h0107
 #Define IDS_LVI_HEAD_GD3OFF     &h0108
+#Define IDS_LVI_HEAD_LOOPOFF    &h0109
 
 #Define IDS_LVH_HEAD_NAME       &h0200
 #Define IDS_LVH_HEAD_VALUE      &h0201
@@ -119,7 +120,7 @@
 #Define CCH_APPNAME             &h00000010 /'16'/
 #Define CB_APPNAME              Cast(SIZE_T, (CCH_APPNAME * SizeOf(TCHAR)))
 
-''size of header listview headings
+/'''size of header listview headings
 #Define CCH_LVH_HEAD            &h00000100
 #Define CB_LVH_HEAD             Cast(SIZE_T, (CCH_LVH_HEAD * SizeOf(TCHAR)))
 #Define C_LVH_HEAD              &h00000003
@@ -144,6 +145,6 @@
 '#Define CCH_LVIVALHEX           &h0000000A
 '#Define CB_LVIVALHEX            Cast(SIZE_T, (CCH_LVIVALHEX * SizeOf(TCHAR)))
 '#Define CCH_LVIVALDEC           &h0000000A
-'#Define CB_LVIVALDEC            Cast(SIZE_T, (CCH_LVIVALDEC * SizeOf(TCHAR)))
+'#Define CB_LVIVALDEC            Cast(SIZE_T, (CCH_LVIVALDEC * SizeOf(TCHAR)))'/
 
 ''EOF

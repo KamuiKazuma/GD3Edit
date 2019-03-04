@@ -126,7 +126,7 @@ Private Function GenOptsProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wP
                                 genOpts.bShowFullPath = FALSE
                             End If
                             
-                            SendMessage(hWnd, PSM_CHANGED, Cast(WPARAM, hwndPrsht), NULL)
+                            SendMessage(hWnd, PSM_CHANGED, Cast(WPARAM, hWnd), NULL)
                             
                     End Select
                     

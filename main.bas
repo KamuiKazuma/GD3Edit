@@ -235,21 +235,17 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
                             ''unlock the file name heap
                             If (HeapUnlock(hFni) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
                             
-                            Dim lvi As LVITEM
+                            SetLastError(UpdateHeadListView(GetDlgItem(hWnd, IDC_LIV_MAIN), @vgmHead))
+                            If (GetLastError()) Then Return(SysErrMsgBox(hWnd, GetLastError()))
+                            
+                            /'Dim lvi As LVITEM
                             lvi.mask = LVIF_TEXT
                             lvi.iItem = 0
                             lvi.iSubItem = 1
                             Dim szVer As ZString*12
                             If (TranslateBcdCodeVer(vgmHead.dwVersion, Cast(LPTSTR, @szVer)) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
-                            'szVer = "1.60"
                             lvi.pszText = Cast(LPTSTR, @szVer)
-                            If (SendMessage(GetDlgItem(hWnd, IDC_LIV_MAIN), LVM_SETITEM, NULL, Cast(LPARAM, @lvi)) = FALSE) Then ProgMsgBox(hInstance, hWnd, IDS_MSG_UIUPFAIL, IDS_APPNAME, MB_ICONERROR)
-                            
-                            ''update UI
-                            '#If __FB_DEBUG__
-                            '    ? !"fccVGM\t= "; Hex(vgmHead.fccVGM, 8)
-                            '    ? !"dwVersion\t= "; Hex(vgmHead.dwVersion, 8)
-                            '#EndIf
+                            If (SendMessage(GetDlgItem(hWnd, IDC_LIV_MAIN), LVM_SETITEM, NULL, Cast(LPARAM, @lvi)) = FALSE) Then ProgMsgBox(hInstance, hWnd, IDS_MSG_UIUPFAIL, IDS_APPNAME, MB_ICONERROR)'/
                             
                         Case IDM_SAVE
                             
@@ -684,8 +680,11 @@ Private Function InitMainChildren (ByVal hDlg As HWND) As BOOL
     ''set a loading cursor
     Dim hCurPrev As HCURSOR = SetCursor(LoadCursor(NULL, IDC_APPSTARTING))
     
-    ''init child windows
-    If (InitMainListView(GetDlgItem(hDlg, IDC_LIV_MAIN)) = FALSE) Then Return(FALSE)
+    ''init status bar
+    
+    ''init Header ListView
+    SetLastError(InitHeadListView(GetDlgItem(hDlg, IDC_LIV_MAIN)))
+    If (GetLastError()) Then Return(FALSE)
     
     ''restore cursor
     SetCursor(hCurPrev)
@@ -696,149 +695,7 @@ Private Function InitMainChildren (ByVal hDlg As HWND) As BOOL
     
 End Function
 
-Private Function InitMainListView (ByVal hWnd As HWND) As BOOL
-    
-    #If __FB_DEBUG__
-        ? "Calling:", __FILE__; "\"; __FUNCTION__
-        ? !"hWnd\t= 0x"; Hex(hWnd)
-    #EndIf
-    
-    ''create a local heap
-    Dim hHeap As HANDLE = HeapCreate(NULL, NULL, (((CB_LVH_HEAD * C_LVH_HEAD) + SizeOf(LVCOLUMN)) + ((CB_LVI_HEAD * C_LVI_HEAD) + SizeOf(LVITEM))))
-    If (hHeap = INVALID_HANDLE_VALUE) Then Return(FALSE)
-    #If __FB_DEBUG__
-        ? !"hHeap\t= 0x"; Hex(hHeap)
-    #EndIf
-    
-    ''initialize the listview
-    SendMessage(hWnd, WM_SETREDRAW, FALSE, NULL)
-    If (InitMainListViewColumns(hHeap, hWnd) = FALSE) Then Return(FALSE)
-    If (InitMainListViewItemNames(hHeap, hWnd) = FALSE) Then Return(FALSE)
-    SendMessage(hWnd, WM_SETREDRAW, TRUE, NULL)
-    
-    ''destroy the local heap
-    If (HeapDestroy(hHeap) = FALSE) Then Return(FALSE)
-    
-    ''return
-    SetLastError(ERROR_SUCCESS)
-    Return(TRUE)
-    
-End Function
-
-Private Function InitMainListViewColumns (ByVal hHeap As HANDLE, ByVal hWnd As HWND) As BOOL
-    
-    #If __FB_DEBUG__
-        ? "Calling:", __FILE__; "\"; __FUNCTION__
-        ? !"hHeap\t= 0x"; Hex(hHeap)
-        ? !"hWnd\t= 0x"; Hex(hWnd)
-    #EndIf
-    
-    ''lock the heap
-    If (HeapLock(hHeap) = FALSE) Then Return(FALSE)
-    
-    ''allocate space for column headings
-    Dim plpszHead As LPTSTR Ptr
-    SetLastError(HeapAllocPtrList(hHeap, Cast(LPVOID Ptr, plpszHead), CB_LVH_HEAD, C_LVH_HEAD))
-    If (GetLastError()) Then Return(FALSE)
-    
-    ''load the column headings
-    SetLastError(LoadStringRange(hInstance, plpszHead, IDS_LVH_HEAD_NAME, CCH_LVH_HEAD, C_LVH_HEAD))
-    If (GetLastError()) Then Return(FALSE)
-    
-    ''allocate a column structure
-    Dim pLvc As LPLVCOLUMN = Cast(LPLVCOLUMN, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, SizeOf(LVCOLUMN)))
-    If (pLvc = NULL) Then Return(FALSE)
-    #If __FB_DEBUG__
-        ? !"pLvc\t= 0x"; Hex(pLvc)
-    #EndIf
-    
-    ''setup columns
-    pLvc->mask  = (LVCF_FMT Or LVCF_WIDTH Or LVCF_TEXT Or LVCF_SUBITEM)
-    pLvc->cx    = 100 ''this number might need to be changed later
-    
-    For iCol As INT32 = 0 To (C_LVH_HEAD - 1)
-        #If __FB_DEBUG__
-            ? !"iCol\t= "; iCol
-        #EndIf
-        
-        pLvc->iSubItem = iCol
-        If (iCol < 1) Then
-            pLvc->fmt = LVCFMT_RIGHT
-        Else
-            pLvc->fmt = LVCFMT_LEFT
-        End If
-        
-        pLvc->pszText = plpszHead[iCol]
-        If (SendMessage(hWnd, LVM_INSERTCOLUMN, iCol, Cast(LPARAM, pLvc)) = -1) Then Return(FALSE)
-        
-    Next iCol
-    
-    ''free the column structure & headings
-    If (HeapFree(hHeap, NULL, Cast(LPVOID, pLvc)) = FALSE) Then Return(FALSE)
-    SetLastError(HeapFreePtrList(hHeap, Cast(LPVOID Ptr, plpszHead), CB_LVH_HEAD, C_LVH_HEAD))
-    If (GetLastError()) Then Return(FALSE)
-    
-    ''unlock the heap
-    If (HeapUnlock(hHeap) = FALSE) Then Return(FALSE)
-    
-    ''return
-    SetLastError(ERROR_SUCCESS)
-    Return(TRUE)
-    
-End Function
-
-Private Function InitMainListViewItemNames (ByVal hHeap As HANDLE, ByVal hWnd As HWND) As BOOL
-    
-    #If __FB_DEBUG__
-        ? "Calling:", __FILE__; "\"; __FUNCTION__
-        ? !"hHeap\t= 0x"; Hex(hHeap)
-        ? !"hWnd\t= 0x"; Hex(hWnd)
-    #EndIf
-    
-    ''lock the heap
-    If (HeapLock(hHeap) = FALSE) Then Return(FALSE)
-    
-    ''allocate space for listview items
-    Dim plpszItem As LPTSTR Ptr
-    SetLastError(HeapAllocPtrList(hHeap, Cast(LPVOID Ptr, plpszItem), CB_LVI_HEAD, C_LVI_HEAD))
-    If (GetLastError()) Then Return(FALSE)
-    
-    ''load the listview items
-    SetLastError(LoadStringRange(hInstance, plpszItem, IDS_LVI_HEAD_VGMVER, CCH_LVI_HEAD, C_LVI_HEAD))
-    If (GetLastError()) Then Return(FALSE)
-    
-    ''allocate space for a listview item
-    Dim pLvi As LVITEM Ptr = Cast(LPLVITEM, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, SizeOf(LVITEM)))
-    If (pLvi = NULL) Then Return(FALSE)
-    #If __FB_DEBUG__
-        ? !"pLvi\t= 0x"; Hex(pLvi)
-    #EndIf
-    
-    pLvi->mask = LVIF_TEXT
-    For iItem As INT32 = 0 To (C_LVI_HEAD - 1)
-        #If __FB_DEBUG__
-            ? !"iItem\t="; iItem
-        #EndIf
-        pLvi->iItem     = iItem
-        pLvi->pszText   = plpszItem[iItem]
-        If (SendMessage(hWnd, LVM_INSERTITEM, NULL, Cast(LPARAM, pLvi)) = -1) Then Return(FALSE)
-    Next iItem
-    
-    ''free listview item names and the item structure
-    If (HeapFree(hHeap, NULL, Cast(LPVOID, pLvi)) = FALSE) Then Return(FALSE)
-    SetLastError(HeapFreePtrList(hHeap, Cast(LPVOID Ptr, plpszItem), CB_LVI_HEAD, C_LVI_HEAD))
-    If (GetLastError()) Then Return(FALSE)
-    
-    ''unlock the heap
-    If (HeapUnlock(hHeap) = FALSE) Then Return(FALSE)
-    
-    ''return
-    SetLastError(ERROR_SUCCESS)
-    Return(TRUE)
-    
-End Function
-
-Private Function TranslateBcdCodeVer (ByVal dwBcdCode As DWORD32, ByVal lpszVer As LPTSTR) As BOOL
+/'Private Function TranslateBcdCodeVer (ByVal dwBcdCode As DWORD32, ByVal lpszVer As LPTSTR) As BOOL
     
     #If __FB_DEBUG__
         ? "Calling:", __FILE__; "\"; __FUNCTION__
@@ -846,21 +703,8 @@ Private Function TranslateBcdCodeVer (ByVal dwBcdCode As DWORD32, ByVal lpszVer 
         ? !"lpszVer\t= 0x"; Hex(lpszVer)
     #EndIf
     
-    /' Heap Sizes:
-        /'  Min:
-            Bytes of dwBcdCode: (4 * SizeOf(UByte))
-        '/
-        /'  Max:
-            Bytes of dwBcdCode: (4 * SizeOf(UByte))
-            String representations of bytes in dwBcdCode: (4 * (2 * SizeOf(TCHAR)))
-            Output string: (11 * SizeOf(TCHAR))
-            Total = (4 * SizeOf(UByte)) + (4 * (2 * SizeOf(TCHAR))) =
-            4 + (8 * SizeOf(TCHAR)) 
-        '/
-    '/
-    
     ''create a local heap
-    Dim hHeap As HANDLE = HeapCreate(NULL, (4 * SizeOf(UByte)), NULL)
+    Dim hHeap As HANDLE = HeapCreate(NULL, (4 * SizeOf(UByte)), (4 * SizeOf(UByte)))
     If (hHeap = INVALID_HANDLE_VALUE) Then Return(FALSE)
     #If __FB_DEBUG__
         ? __FUNCTION__; !"\\hHeap\t= 0x"; Hex(hHeap)
@@ -869,17 +713,17 @@ Private Function TranslateBcdCodeVer (ByVal dwBcdCode As DWORD32, ByVal lpszVer 
     ''get sub version numbers
     Dim pubSubVer As UByte Ptr = Cast(UByte Ptr, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, (4 * SizeOf(UByte))))
     If (pubSubVer = NULL) Then Return(FALSE)
+    #If __FB_DEBUG__
+        ? __FUNCTION__; !"\\pubSubVer\t= 0x"; Hex(pubSubVer)
+    #EndIf
     pubSubVer[0] = HiWord(HiByte(dwBcdCode))
     pubSubVer[1] = HiWord(LoByte(dwBcdCode))
     pubSubVer[2] = LoWord(HiByte(dwBcdCode))
     pubSubVer[3] = LoWord(LoByte(dwBcdCode))
-    #If __FB_DEBUG__
-        ? __FUNCTION__; !"\\pubSubVer\t= 0x"; Hex(pubSubVer)
-    #EndIf
     
     ''figure out how large the version number should be
-    Dim cSubVer As INT32    ''number of sub version numbers
-    For iSubVer As INT32 = 3 To 0 Step -1
+    Dim cSubVer As UINT_PTR    ''number of sub version numbers
+    For iSubVer As UINT_PTR = 3 To 0 Step -1
         
         ''add up sub version numbers that are non-zero
         If (pubSubVer[iSubVer] > 0) Then
@@ -890,7 +734,7 @@ Private Function TranslateBcdCodeVer (ByVal dwBcdCode As DWORD32, ByVal lpszVer 
     Next iSubVer
     
     ''format output string
-    For iSubVer As INT32 = 3 To cSubVer Step -1
+    For iSubVer As UINT_PTR = 3 To cSubVer Step -1
         
         ''exclude the "." separator on the last sub version number
         If (iSubVer = cSubVer) Then
@@ -913,6 +757,6 @@ Private Function TranslateBcdCodeVer (ByVal dwBcdCode As DWORD32, ByVal lpszVer 
     SetLastError(ERROR_SUCCESS)
     Return(TRUE)
     
-End Function
+End Function'/
 
 ''EOF

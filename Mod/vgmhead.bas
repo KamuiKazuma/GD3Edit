@@ -14,7 +14,7 @@
 Public Function ReadVGMHeader (ByVal hFile As HANDLE, ByVal pVgmHead As VGM_HEADER Ptr) As LRESULT
     
     #If __FB_DEBUG__
-        ? "Calling:", __FILE__; "/"; __FUNCTION__
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
         ? !"hFile\t= 0x"; Hex(hFile)
         ? !"pVGMHead\t= 0x"; Hex(pVgmHead)
     #EndIf
@@ -46,7 +46,7 @@ End Function
 Private Function PrepareHeader (ByVal pVgmHead As VGM_HEADER Ptr) As BOOL
     
     #If __FB_DEBUG__
-        ? "Calling:", __FILE__; "/"; __FUNCTION__
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
         ? !"pVGMHead\t= 0x"; Hex(pVgmHead)
     #EndIf
     
@@ -95,7 +95,7 @@ End Function
 Private Function MakeOffsetsAddresses (ByVal pVgmHead As VGM_HEADER Ptr) As BOOL
     
     #If __FB_DEBUG__
-        ? "Calling:", __FILE__; "/"; __FUNCTION__
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
         ? !"pVGMHead\t= 0x"; Hex(pVgmHead)
     #EndIf
     
@@ -117,7 +117,7 @@ End Function
 Private Function MakeAddressesOffsets (ByVal pVgmHead As VGM_HEADER Ptr) As BOOL
     
     #If __FB_DEBUG__
-        ? "Calling:", __FILE__; "/"; __FUNCTION__
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
         ? !"pVGMHead\t= 0x"; Hex(pVgmHead)
     #EndIf
     
@@ -133,6 +133,70 @@ Private Function MakeAddressesOffsets (ByVal pVgmHead As VGM_HEADER Ptr) As BOOL
     
     ''return
     Return(ERROR_SUCCESS)
+    
+End Function
+
+Public Function TranslateBcdCodeVer (ByVal dwBcdCode As DWORD32, ByVal lpszVer As LPTSTR) As BOOL
+    
+    #If __FB_DEBUG__
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
+        ? !"dwBcdCode\t= 0x"; Hex(dwBcdCode)
+        ? !"lpszVer\t= 0x"; Hex(lpszVer)
+    #EndIf
+    
+    ''create a local heap
+    Dim hHeap As HANDLE = HeapCreate(NULL, (4 * SizeOf(UByte)), (4 * SizeOf(UByte)))
+    If (hHeap = INVALID_HANDLE_VALUE) Then Return(FALSE)
+    #If __FB_DEBUG__
+        ? __FUNCTION__; !"\\hHeap\t= 0x"; Hex(hHeap)
+    #EndIf
+    
+    ''get sub version numbers
+    Dim pubSubVer As UByte Ptr = Cast(UByte Ptr, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, (4 * SizeOf(UByte))))
+    If (pubSubVer = NULL) Then Return(FALSE)
+    #If __FB_DEBUG__
+        ? __FUNCTION__; !"\\pubSubVer\t= 0x"; Hex(pubSubVer)
+    #EndIf
+    pubSubVer[0] = HiWord(HiByte(dwBcdCode))
+    pubSubVer[1] = HiWord(LoByte(dwBcdCode))
+    pubSubVer[2] = LoWord(HiByte(dwBcdCode))
+    pubSubVer[3] = LoWord(LoByte(dwBcdCode))
+    
+    ''figure out how large the version number should be
+    Dim cSubVer As UINT_PTR    ''number of sub version numbers
+    For iSubVer As UINT_PTR = 3 To 0 Step -1
+        
+        ''add up sub version numbers that are non-zero
+        If (pubSubVer[iSubVer] > 0) Then
+            cSubVer += 1
+        Else
+            Exit For
+        End If
+    Next iSubVer
+    
+    ''format output string
+    For iSubVer As UINT_PTR = 3 To cSubVer Step -1
+        
+        ''exclude the "." separator on the last sub version number
+        If (iSubVer = cSubVer) Then
+            *lpszVer = (Hex(pubSubVer[iSubVer]) + *lpszVer)
+        Else
+            *lpszVer = ("." + Hex(pubSubVer[iSubVer]) + *lpszVer)
+        End If
+        
+        #If __FB_DEBUG__
+            ? __FUNCTION__; "\*lpszVer\t= "; *lpszVer
+        #EndIf
+        
+    Next iSubVer
+    If (HeapFree(hHeap, NULL, Cast(LPVOID, pubSubVer)) = FALSE) Then Return(FALSE)
+    
+    ''destroy the local heap
+    If (HeapDestroy(hHeap) = FALSE) Then Return(FALSE)
+    
+    ''return
+    SetLastError(ERROR_SUCCESS)
+    Return(TRUE)
     
 End Function
 
