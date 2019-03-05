@@ -54,6 +54,7 @@
         0x0300          -   Unsaved file message.
         0x0301          -   UI update failed message.
         0x0302          -   UI init failed message.
+        0x0303          -   VGM format bad message.
     '/
     /'  0x0400-0x04FF   -   Registry key names.
         0x0400-0x0401   -   OPTS_GEN structure key names.
@@ -82,6 +83,7 @@
 #Define IDS_LVI_HEAD_EOFOFF     &h0107
 #Define IDS_LVI_HEAD_GD3OFF     &h0108
 #Define IDS_LVI_HEAD_LOOPOFF    &h0109
+#Define IDS_LVI_HEAD_EXTOFF     &h010A
 
 #Define IDS_LVH_HEAD_NAME       &h0200
 #Define IDS_LVH_HEAD_VALUE      &h0201
@@ -90,6 +92,7 @@
 #Define IDS_MSG_UNSAVED         &h0300
 #Define IDS_MSG_UIUPFAIL        &h0301
 #Define IDS_MSG_UIINITFAIL      &h0302
+#Define IDS_MSG_VGMFORMATBAD    &h0303
 
 #Define IDS_REG_SHOWFULLPATH    &h0400
 #Define IDS_REG_CUSTFILT        &h0401
@@ -119,32 +122,5 @@
 ''sizes of AppName
 #Define CCH_APPNAME             &h00000010 /'16'/
 #Define CB_APPNAME              Cast(SIZE_T, (CCH_APPNAME * SizeOf(TCHAR)))
-
-/'''size of header listview headings
-#Define CCH_LVH_HEAD            &h00000100
-#Define CB_LVH_HEAD             Cast(SIZE_T, (CCH_LVH_HEAD * SizeOf(TCHAR)))
-#Define C_LVH_HEAD              &h00000003
-#Define LVH_HEAD_NAME           &h00000000
-#Define LVH_HEAD_VALUE          &h00000001
-#Define LVH_HEAD_VALUEHEX       &h00000002
-
-''size of listview items
-#Define CCH_LVI_HEAD            &h00000100
-#Define CB_LVI_HEAD             Cast(SIZE_T, (CCH_LVI_HEAD * SizeOf(TCHAR)))
-#Define C_LVI_HEAD              &h00000009
-#Define LVI_HEAD_VGMVER         &h00000000
-#Define LVI_HEAD_LOOPBASE       &h00000001
-#Define LVI_HEAD_LOOPMOD        &h00000002
-#Define LVI_HEAD_LOOPSAMPLES    &h00000003
-#Define LVI_HEAD_TOTALSAMPLES   &h00000004
-#Define LVI_HEAD_VOLMOD         &h00000005
-#Define LVI_HEAD_RATE           &h00000006
-#Define LVI_HEAD_EOFOFF         &h00000007
-#Define LVI_HEAD_GD3OFF         &h00000008
-
-'#Define CCH_LVIVALHEX           &h0000000A
-'#Define CB_LVIVALHEX            Cast(SIZE_T, (CCH_LVIVALHEX * SizeOf(TCHAR)))
-'#Define CCH_LVIVALDEC           &h0000000A
-'#Define CB_LVIVALDEC            Cast(SIZE_T, (CCH_LVIVALDEC * SizeOf(TCHAR)))'/
 
 ''EOF

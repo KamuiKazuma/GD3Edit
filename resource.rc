@@ -45,6 +45,7 @@ LANGUAGE 9, 1
 #define IDS_LVI_HEAD_EOFOFF     0x0107 //263
 #define IDS_LVI_HEAD_GD3OFF     0x0108 //264
 #define IDS_LVI_HEAD_LOOPOFF    0x0109 //265
+#define IDS_LVI_HEAD_EXTOFF     0x010A //266
 
 #define IDS_LVH_HEAD_NAME       0x0200 //512
 #define IDS_LVH_HEAD_VALUE      0x0201 //513
@@ -53,6 +54,7 @@ LANGUAGE 9, 1
 #define IDS_MSG_UNSAVED         0x0300 //768
 #define IDS_MSG_UIUPFAIL        0x0301 //769
 #define IDS_MSG_UIINITFAIL      0x0302 //770
+#define IDS_MSG_VGMFORMATBAD    0x0303 //771
 
 #define IDS_REG_SHOWFULLPATH    0x0400 //1024
 #define IDS_REG_CUSTFILT        0x0401 //1025
@@ -72,7 +74,7 @@ LANGUAGE 9, 1
 #define PROP_LG_CYDLG           0x00DA //218
 
 IDR_VERSIONINFO VERSIONINFO
-FILEVERSION     1, 0, 0, 93
+FILEVERSION     1, 0, 0, 100
 PRODUCTVERSION  1, 0, 0, 65
 FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
 FILEFLAGS       VS_FF_PRIVATEBUILD | VS_FF_SPECIALBUILD | VS_FF_DEBUG
@@ -84,7 +86,7 @@ BEGIN
     BEGIN
         BLOCK "04090000"
         BEGIN
-            VALUE "FileVersion",        "1.0.0.93\0"
+            VALUE "FileVersion",        "1.0.0.100\0"
             VALUE "ProductVersion",     "1.0.0.65\0"
             VALUE "CompanyName",        "Kazusoft Co.\0"
             VALUE "LegalCopyright",     "Copyright (c) 2019 Kazusoft Co.\0"
@@ -167,12 +169,14 @@ BEGIN
     IDS_LVI_HEAD_EOFOFF     "End of File Offset\0"
     IDS_LVI_HEAD_GD3OFF     "GD3 Tag Offset\0"
     IDS_LVI_HEAD_LOOPOFF    "Loop Offset\0"
+    IDS_LVI_HEAD_EXTOFF     "Extra Header Offset\0"
     IDS_LVH_HEAD_NAME       "Name\0"
     IDS_LVH_HEAD_VALUE      "Value\0"
     IDS_LVH_HEAD_VALUEHEX   "Value (Hex)\0"
     IDS_MSG_UNSAVED         "There are unsaved changes in the current file that will be lost if you don't save them.\nWould you like to save them now?"
     IDS_MSG_UIUPFAIL        "Failed to update the UI."
     IDS_MSG_UIINITFAIL      "Failed to initialize the UI."
+    IDS_MSG_VGMFORMATBAD    "The VGM file's format is invalid."
     IDS_REG_SHOWFULLPATH    "Show Full Path in Title Bar"
     IDS_REG_CUSTFILT        "Custom File Filter"
     IDS_REG_LVHEAD          "VGM Header Listview"
