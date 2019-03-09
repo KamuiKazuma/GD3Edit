@@ -9,4 +9,7 @@
 # Ignore FBEdit project files
 *.fbp
 
+# Ignore packaged zip files
+*.zip
+
 # EOF
