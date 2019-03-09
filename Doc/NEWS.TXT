@@ -1,3 +1,6 @@
+GD3Edit User Changelog
 
+v1.0.0.66
+    +   Added statusbar functionality.
 
 EOF
