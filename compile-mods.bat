@@ -1,8 +1,10 @@
 @ECHO OFF
 
 IF EXIST ".\compile-mod.bat" (
+	CALL ".\compile-mod.bat" ".\Mod\errorhandler.bas" ".\Mod\errorhandler.o" ".\errorhandler.o"
 	CALL ".\compile-mod.bat" ".\Mod\filenameinfo.bas" ".\Mod\filenameinfo.o" ".\filenameinfo.o"
 	CALL ".\compile-mod.bat" ".\Mod\headlistview.bas" ".\Mod\headlistview.o" ".\headlistview.o"
+	CALL ".\compile-mod.bat" ".\Mod\mainstatusbar.bas" ".\Mod\mainstatusbar.o" ".\mainstatusbar.o"
 	CALL ".\compile-mod.bat" ".\Mod\options.bas" ".\Mod\options.o" ".\options.o"
 	CALL ".\compile-mod.bat" ".\Mod\vgmhead.bas" ".\Mod\vgmhead.o" ".\vgmhead.o"
 	GOTO EOF

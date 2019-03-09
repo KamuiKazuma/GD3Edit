@@ -2,7 +2,6 @@
 
 IF EXIST ".\compile-lib.bat" (
 	CALL ".\compile-lib.bat" ".\Mod\CreateToolTip\CreateToolTip.bas" ".\Mod\CreateToolTip\libCreateToolTip.a" ".\libCreateToolTip.a"
-	CALL ".\compile-lib.bat" ".\Mod\ErrMsgBox\ErrMsgBox.bas" ".\Mod\CreateToolTip\libErrMsgBox.a" ".\libErrMsgBox.a"
 	CALL ".\compile-lib.bat" ".\Mod\HeapPtrList\HeapPtrList.bas" ".\Mod\HeapPtrList\libHeapPtrList.a" ".\libHeapPtrList.a"
 	SET ERRORLEVEL=0
 	GOTO EOF
