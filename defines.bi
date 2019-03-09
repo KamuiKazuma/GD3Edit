@@ -43,6 +43,7 @@
     /'  0x0001-0x00FF   -   General/misc. items.
         0x0001-0x0007   -   About message text.
         0x0008          -   Options menu caption.
+        0x0009          -   
     '/
     /'  0x0100-0x01FF   -   Listview items.
         0x0100-0x0108   -   VGM header view items.
@@ -72,6 +73,7 @@
 #Define IDS_COMPILER            &h0006
 #Define IDS_SIGNATURE           &h0007
 #Define IDS_OPTIONS             &h0008
+#Define IDS_READONLY            &h0009
 
 #Define IDS_LVI_HEAD_VGMVER     &h0100
 #Define IDS_LVI_HEAD_LOOPBASE   &h0101

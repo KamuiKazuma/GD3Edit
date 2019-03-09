@@ -38,10 +38,12 @@
 #Include Once "win/prsht.bi"
 
 ''include module headers
+#Include "inc/errorhandler.bi"
 #Include "inc/filenameinfo.bi"
 #Include "inc/options.bi"
 #Include "inc/vgmhead.bi"
 #Include "inc/headlistview.bi"
+#Include "inc/mainstatusbar.bi"
 #Include "defines.bi"
 
 Extern hInstance As HINSTANCE
@@ -87,17 +89,12 @@ Declare Function SetMainWndTitle (ByVal hDlg As HWND, ByVal lpszFile As LPCTSTR)
 '/
 Declare Sub SetupFileRights (ByVal bReadOnly As BOOL, ByRef dwAccess As DWORD32, ByRef dwShare As DWORD32)
 
-Declare Sub FatalErrorProc (ByVal hDlg As HWND, ByVal dwErrCode As DWORD32)
-
 ''displays the about message box
 Declare Function AboutMsgBox (ByVal hDlg As HWND) As BOOL
-
-''main window children initialization functions:
 
 /'Initializes the main window's children
     hDlg:HWND   -   Handle to the main window.
 '/
 Declare Function InitMainChildren (ByVal hDlg As HWND) As BOOL
-
 
 ''EOF

@@ -19,21 +19,20 @@ Public Function ReadVGMHeader (ByVal hFile As HANDLE, ByVal pVgmHead As VGM_HEAD
         ? !"pVGMHead\t= 0x"; Hex(pVgmHead)
     #EndIf
     
-    
     ''make sure file begins with "Vgm " indent
-    If (LockFile(hFile, 0, 0, 4, 0) = FALSE) Then Return(GetLastError())
+    If (LockFile(hFile, 0, NULL, 4, NULL) = FALSE) Then Return(GetLastError())
     Dim dwRead As DWORD32
     If (ReadFile(hFile, Cast(LPVOID, @pVgmHead->fccVGM), SizeOf(DWORD32), @dwRead, NULL) = FALSE) Then Return(GetLastError())
     If (pVgmHead->fccVGM <> FCC_VGM) Then Return(ERROR_BAD_FORMAT)
-    If (UnlockFile(hFile, 0, 0, 4, 0) = FALSE) Then Return(GetLastError())
+    If (UnlockFile(hFile, 0, NULL, 4, NULL) = FALSE) Then Return(GetLastError())
     
     ''restore file pointer to beginning of file
     If (SetFilePointer(hFile, 0, NULL, FILE_BEGIN) = INVALID_SET_FILE_POINTER) Then Return(GetLastError())
     
     ''read the file
-    If (LockFile(hFile, 0, 0, SizeOf(VGM_HEADER), 0) = FALSE) Then Return(GetLastError())
+    If (LockFile(hFile, 0, NULL, SizeOf(VGM_HEADER), NULL) = FALSE) Then Return(GetLastError())
     If (ReadFile(hFile, Cast(LPVOID, pVgmHead), SizeOf(VGM_HEADER), @dwRead, NULL) = FALSE) Then Return(GetLastError())
-    If (UnlockFile(hFile, 0, 0, SizeOf(VGM_HEADER), 0) = FALSE) Then Return(GetLastError())
+    If (UnlockFile(hFile, 0, NULL, SizeOf(VGM_HEADER), NULL) = FALSE) Then Return(GetLastError())
     
     ''prepare the header for usage
     If (PrepareHeader(pVgmHead) = FALSE) Then Return(GetLastError())
@@ -54,28 +53,28 @@ Private Function PrepareHeader (ByVal pVgmHead As VGM_HEADER Ptr) As BOOL
     With *pVgmHead
         If (.dwVersion < VGM_VER_101) Then .dwRate = NULL
         If (.dwVersion < VGM_VER_110) Then
-            .wPSGFeedback = NULL
-            .PSGSRWidth = NULL
-            .dwHzYM2612 = .dwHzYM2413
-            .dwHzYM2151 = .dwHzYM2413
+            .wPSGFeedback   = NULL
+            .PSGSRWidth     = NULL
+            .dwHzYM2612     = .dwHzYM2413
+            .dwHzYM2151     = .dwHzYM2413
         End If
         If (.dwVersion < VGM_VER_150) Then
-            .dwDataOffset = NULL
-            .PSGFlags = NULL
-            .dwHzSPCM = NULL
-            .dwSPCMIntf = NULL
+            .dwDataOffset   = NULL
+            .PSGFlags       = NULL
+            .dwHzSPCM       = NULL
+            .dwSPCMIntf     = NULL
         End If
     End With
     
     ''convert the relative offsets into absolute addresses
-    SetLastError(MakeOffsetsAddresses(pVgmHead))
+    SetLastError(MakeVgmOffsAddrs(pVgmHead))
     If (GetLastError()) Then Return(FALSE)
     
     ''clear the rest of the unused fields
     With *pVgmHead
         Dim dwCurPos As DWORD32 = .dwDataOffset
         If (.dwVersion < VGM_VER_150) Then dwCurPos = &h40
-        If (dwCurPos = NULL) Then dwCurPos = &h40
+        If (dwCurPos = NULL) Then dwCurPos          = &h40
         
         If (SizeOf(VGM_HEADER) > dwCurPos) Then ZeroMemory((Cast(PUINT_PTR, (pVgmHead + dwCurPos))), (SizeOf(VGM_HEADER) - dwCurPos))
         
@@ -92,12 +91,14 @@ Private Function PrepareHeader (ByVal pVgmHead As VGM_HEADER Ptr) As BOOL
     
 End Function
 
-Private Function MakeOffsetsAddresses (ByVal pVgmHead As VGM_HEADER Ptr) As BOOL
+Public Function MakeVgmOffsAddrs (ByVal pVgmHead As VGM_HEADER Ptr) As LRESULT
     
     #If __FB_DEBUG__
         ? "Calling:", __FILE__; "\"; __FUNCTION__
         ? !"pVGMHead\t= 0x"; Hex(pVgmHead)
     #EndIf
+    
+    If (pVgmHead = NULL) Then Return(ERROR_INVALID_PARAMETER)
     
     ''make the relative offsets into absolute addresses
     With *pVgmHead
@@ -114,12 +115,14 @@ Private Function MakeOffsetsAddresses (ByVal pVgmHead As VGM_HEADER Ptr) As BOOL
     
 End Function
 
-Private Function MakeAddressesOffsets (ByVal pVgmHead As VGM_HEADER Ptr) As BOOL
+Public Function MakeVgmAddrsOffs (ByVal pVgmHead As VGM_HEADER Ptr) As LRESULT
     
     #If __FB_DEBUG__
         ? "Calling:", __FILE__; "\"; __FUNCTION__
         ? !"pVGMHead\t= 0x"; Hex(pVgmHead)
     #EndIf
+    
+    If (pVgmHead = NULL) Then Return(ERROR_INVALID_PARAMETER)
     
     ''make the relative offsets into absolute addresses 
     With *pVgmHead
@@ -147,16 +150,10 @@ Public Function TranslateBcdCodeVer (ByVal dwBcdCode As DWORD32, ByVal lpszVer A
     ''create a local heap
     Dim hHeap As HANDLE = HeapCreate(NULL, (4 * SizeOf(UByte)), (4 * SizeOf(UByte)))
     If (hHeap = INVALID_HANDLE_VALUE) Then Return(FALSE)
-    #If __FB_DEBUG__
-        ? __FUNCTION__; !"\\hHeap\t= 0x"; Hex(hHeap)
-    #EndIf
     
     ''get sub version numbers
     Dim pubSubVer As UByte Ptr = Cast(UByte Ptr, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, (4 * SizeOf(UByte))))
     If (pubSubVer = NULL) Then Return(FALSE)
-    #If __FB_DEBUG__
-        ? __FUNCTION__; !"\\pubSubVer\t= 0x"; Hex(pubSubVer)
-    #EndIf
     pubSubVer[0] = HiWord(HiByte(dwBcdCode))
     pubSubVer[1] = HiWord(LoByte(dwBcdCode))
     pubSubVer[2] = LoWord(HiByte(dwBcdCode))
@@ -183,18 +180,11 @@ Public Function TranslateBcdCodeVer (ByVal dwBcdCode As DWORD32, ByVal lpszVer A
         Else
             *lpszVer = ("." + Hex(pubSubVer[iSubVer]) + *lpszVer)
         End If
-        
-        #If __FB_DEBUG__
-            ? __FUNCTION__; "\*lpszVer\t= "; *lpszVer
-        #EndIf
-        
     Next iSubVer
-    If (HeapFree(hHeap, NULL, Cast(LPVOID, pubSubVer)) = FALSE) Then Return(FALSE)
-    
-    ''destroy the local heap
-    If (HeapDestroy(hHeap) = FALSE) Then Return(FALSE)
     
     ''return
+    If (HeapFree(hHeap, NULL, Cast(LPVOID, pubSubVer)) = FALSE) Then Return(FALSE)
+    If (HeapDestroy(hHeap) = FALSE) Then Return(FALSE)
     SetLastError(ERROR_SUCCESS)
     Return(TRUE)
     

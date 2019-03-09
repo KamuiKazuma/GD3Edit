@@ -183,14 +183,14 @@ End Type
 
 ''VGM 1.71 extra clock header
 Type VGMX_CLK_HDR Field = 1
-    cEntry As UByte
-    pEntry As VGMX_CLK_HDR_DATA Ptr
+    cEntry As UByte                 ''count of entries
+    pEntry As VGMX_CLK_HDR_DATA Ptr ''entries
 End Type
 
 ''VGM 1.71 extra volume header
 Type VGMX_VOL_HDR Field = 1
-    cEntry As UByte
-    pEntry As VGMX_VOL_HDR_DATA Ptr
+    cEntry As UByte                 ''count of entries
+    pEntry As VGMX_VOL_HDR_DATA Ptr ''entries
 End Type
 
 
@@ -218,8 +218,8 @@ End Type
 
 Declare Function ReadVGMHeader (ByVal hFile As HANDLE, ByVal pVgmHead As VGM_HEADER Ptr) As LRESULT
 Declare Function PrepareHeader (ByVal pVgmHead As VGM_HEADER Ptr) As BOOL
-Declare Function MakeOffsetsAddresses (ByVal pVgmHead As VGM_HEADER Ptr) As BOOL
-Declare Function MakeAddressesOffsets (ByVal pVgmHead As VGM_HEADER Ptr) As BOOL
+Declare Function MakeVgmOffsAddrs (ByVal pVgmHead As VGM_HEADER Ptr) As LRESULT
+Declare Function MakeVgmAddrsOffs (ByVal pVgmHead As VGM_HEADER Ptr) As LRESULT
 
 /'  Translates a BCD-code version number into an useable string.
     dwBcdCode:DWORD32   -   The input BCD-code version number.

@@ -14,34 +14,26 @@
 Public Function InitFileNameInfo (ByVal hHeap As HANDLE, ByVal pFni As FILENAMEINFO Ptr) As LRESULT
     
     #If __FB_DEBUG__
-        ? "Calling:", __FUNCTION__
-        ? !"hHeap\t= 0x"; Hex(hHeap, 8)
-        ? !"pFni\t= 0x"; Hex(pFni, 8)
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
+        ? !"hHeap\t= 0x"; Hex(hHeap)
+        ? !"pFni\t= 0x"; Hex(pFni)
     #EndIf
+    
+    If (pFni = NULL) Then Return(ERROR_INVALID_PARAMETER)
     
     ''get a lock on the heap
     If (HeapLock(hHeap) = FALSE) Then Return(GetLastError())
     
     ''allocate items
     With *pFni
-        
-        ''allocate file
         .lpszFile = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, FNI_CBFILE))
         If (.lpszFile = NULL) Then Return(GetLastError())
-        
-        ''allocate file title
         .lpszFileTitle = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, FNI_CBFILE))
         If (.lpszFileTitle = NULL) Then Return(GetLastError())
-        
-        .cchFileOffset = 0
-        .cchExtOffset = 0
-        
     End With
     
-    ''unlock the heap
-    If (HeapUnlock(hHeap) = FALSE) Then Return(GetLastError())
-    
     ''return
+    If (HeapUnlock(hHeap) = FALSE) Then Return(GetLastError())
     Return(ERROR_SUCCESS)
     
 End Function
@@ -49,10 +41,12 @@ End Function
 Public Function FreeFileNameInfo (ByVal hHeap As HANDLE, ByVal pFni As FILENAMEINFO Ptr) As LRESULT
     
     #If __FB_DEBUG__
-        ? "Calling:", __FUNCTION__
-        ? !"hHeap\t= 0x"; Hex(hHeap, 8)
-        ? !"pFni\t= 0x"; Hex(pFni, 8)
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
+        ? !"hHeap\t= 0x"; Hex(hHeap)
+        ? !"pFni\t= 0x"; Hex(pFni)
     #EndIf
+    
+    If (pFni = NULL) Then Return(ERROR_INVALID_PARAMETER)
     
     ''get a lock on the heap, this also verifies its existence
     If (HeapLock(hHeap) = FALSE) Then Return(GetLastError())
@@ -63,11 +57,33 @@ Public Function FreeFileNameInfo (ByVal hHeap As HANDLE, ByVal pFni As FILENAMEI
         If (HeapFree(hHeap, NULL, Cast(LPVOID, .lpszFileTitle)) = FALSE) Then Return(GetLastError())
     End With
     
-    ''unlock & destroy the heap
+    ''return
     If (HeapUnlock(hHeap) = FALSE) Then Return(GetLastError())
+    Return(ERROR_SUCCESS)
+    
+End Function
+
+Public Function ClearFileNameInfo (ByVal hHeap As HANDLE, ByVal pFni As FILENAMEINFO Ptr) As LRESULT
+    
+    #If __FB_DEBUG__
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
+        ? !"hHeap\t= 0x"; Hex(hHeap)
+        ? !"pFni\t= 0x"; Hex(pFni)
+    #EndIf
+    
+    If (pFni = NULL) Then Return(ERROR_INVALID_PARAMETER)
+    
+    ''get a lock on the heap, this also verifies its existence
+    If (HeapLock(hHeap) = FALSE) Then Return(GetLastError())
+    
+    ''re-init fni
+    ZeroMemory(@pFni->lpszFile, FNI_CBFILE)
+    ZeroMemory(@pFni->lpszFileTitle, FNI_CBFILE)
+    ZeroMemory(@pFni->cchFileOffset, ((2 * SizeOf(ULONG32)) + SizeOf(BOOL)))
     
     ''return
-    Return(ERROR_SUCCESS)
+    If (HeapUnlock(hHeap) = FALSE) Then Return(GetLastError())
+    Return(ERROR_SUCCESS) 
     
 End Function
 

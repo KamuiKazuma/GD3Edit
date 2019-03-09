@@ -34,6 +34,7 @@ LANGUAGE 9, 1
 #define IDS_COMPILER            0x0006 //6
 #define IDS_SIGNATURE           0x0007 //7
 #define IDS_OPTIONS             0x0008 //8
+#define IDS_READONLY            0x0009 //9
 
 #define IDS_LVI_HEAD_VGMVER     0x0100 //256
 #define IDS_LVI_HEAD_LOOPBASE   0x0101 //257
@@ -74,8 +75,8 @@ LANGUAGE 9, 1
 #define PROP_LG_CYDLG           0x00DA //218
 
 IDR_VERSIONINFO VERSIONINFO
-FILEVERSION     1, 0, 0, 100
-PRODUCTVERSION  1, 0, 0, 65
+FILEVERSION     1, 1, 0, 3
+PRODUCTVERSION  1, 0, 0, 66
 FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
 FILEFLAGS       VS_FF_PRIVATEBUILD | VS_FF_SPECIALBUILD | VS_FF_DEBUG
 FILEOS          VOS_NT_WINDOWS32
@@ -86,8 +87,8 @@ BEGIN
     BEGIN
         BLOCK "04090000"
         BEGIN
-            VALUE "FileVersion",        "1.0.0.100\0"
-            VALUE "ProductVersion",     "1.0.0.65\0"
+            VALUE "FileVersion",        "1.1.0.3\0"
+            VALUE "ProductVersion",     "1.0.0.66\0"
             VALUE "CompanyName",        "Kazusoft Co.\0"
             VALUE "LegalCopyright",     "Copyright (c) 2019 Kazusoft Co.\0"
             VALUE "LegalTrademarks",    "Kazusoft Co. and the Kazusoft logo are Trademarks of Lisa Murray\0"
@@ -95,8 +96,8 @@ BEGIN
             VALUE "InternalName",       "GD3Edit\0"
             VALUE "OriginalFilename",   "GD3Edit.exe\0"
             VALUE "ProductName",        "GD3Edit\0"
-            VALUE "PrivateBuild",       "Built by Lisa for debugging\0"
-            VALUE "SpecialBuild",       "Debug Build\0"
+            //VALUE "PrivateBuild",       "\0"
+            VALUE "SpecialBuild",       "Pre-release build\0"
         END
     END
     BLOCK "VarFileInfo"
@@ -152,13 +153,14 @@ STRINGTABLE
 LANGUAGE 9, 1
 BEGIN
     IDS_APPNAME             "GD3Edit"
-    IDS_ABOUT               "GD3Edit\nEditor for GD3 Tags\nCopyright (c) 2019 Kazusoft Co.\nKazusoft Co. and the Kazusoft logo are Trademarks of Lisa Murray\n"
+    IDS_ABOUT               "GD3Edit\nVGM Header and GD3 Tag Editor\nCopyright (c) 2019 Kazusoft Co.\nKazusoft Co. and the Kazusoft logo are Trademarks of Lisa Murray\n"
     IDS_VER32BIT            "\nWin32 Version"
     IDS_VER64BIT            "\nWin64 Version"
     IDS_BUILDDATE           "\nBuild Date:\t"
     IDS_COMPILER            "\nCompiler Information:"
     IDS_SIGNATURE           "\nSignature:\t\t"
     IDS_OPTIONS             "GD3Edit Options"
+    IDS_READONLY            "Read Only"
     IDS_LVI_HEAD_VGMVER     "VGM Version\0"
     IDS_LVI_HEAD_LOOPBASE   "Loop Base\0"
     IDS_LVI_HEAD_LOOPMOD    "Loop Modifier\0"

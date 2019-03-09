@@ -6,7 +6,7 @@
 
 #Include "header.bi"
 #Include "mod/heapptrlist/heapptrlist.bi"
-#Include "mod/errmsgbox/errmsgbox.bi"
+'#Include "mod/errmsgbox/errmsgbox.bi"
 
 Public Function StartOptionsMenu (ByVal hDlg As HWND, ByVal nStartPage As LONG32) As LRESULT
     
