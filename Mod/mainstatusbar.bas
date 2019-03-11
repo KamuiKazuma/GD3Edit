@@ -1,3 +1,8 @@
+/'
+    
+    mainstatusbar.bas
+    
+'/
 
 #Include "header.bi"
 
@@ -8,12 +13,8 @@ Public Function InitMainStatusBar (ByVal hWnd As HWND) As LRESULT
         ? !"hWnd\t= 0x"; Hex(hWnd)
     #EndIf
     
-    ''create a local heap
-    Dim hHeap As HANDLE = HeapCreate(NULL, (C_SBR_PART * SizeOf(ULONG32)), (C_SBR_PART * SizeOf(LONG32)))
-    If (hHeap = INVALID_HANDLE_VALUE) Then Return(GetLastError())
-    
     ''setup parts information
-    Dim pnPart As PLONG32 = HeapAlloc(hHeap, HEAP_ZERO_MEMORY, (C_SBR_PART * SizeOf(LONG32)))
+    Dim pnPart As PLONG32 = Cast(PLONG32, LocalAlloc(LPTR, (C_SBR_PART_POS * SizeOf(LONG32))))
     If (pnPart = NULL) Then Return(GetLastError())
     pnPart[0] = SBR_PART_POS_VER
     pnPart[1] = SBR_PART_POS_READONLY
@@ -23,8 +24,7 @@ Public Function InitMainStatusBar (ByVal hWnd As HWND) As LRESULT
     If (SendMessage(hWnd, SB_SETPARTS, C_SBR_PART_POS, Cast(LPARAM, pnPart)) = FALSE) Then Return(-1)
     
     ''return
-    If (HeapFree(hHeap, NULL, Cast(LPVOID, pnPart)) = FALSE) Then Return(GetLastError())
-    If (HeapDestroy(hHeap) = FALSE) Then Return(GetLastError())
+    If (LocalFree(Cast(HLOCAL, pnPart)) = NULL) Then Return(GetLastError())
     Return(ERROR_SUCCESS)
     
 End Function
@@ -50,7 +50,7 @@ Public Function SetSbrItemTextId (ByVal hWnd As HWND, ByVal hInst As HINSTANCE, 
     If (SendMessage(hWnd, SB_SETTEXT, dwPartId, Cast(LPARAM, lpszText)) = FALSE) Then Return(FALSE)
     
     ''return
-    LocalFree(Cast(HLOCAL, lpszText))
+    If (LocalFree(Cast(HLOCAL, lpszText)) = NULL) Then Return(FALSE)
     SetLastError(ERROR_SUCCESS)
     Return(TRUE)
     

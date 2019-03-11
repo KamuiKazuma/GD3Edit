@@ -90,9 +90,10 @@ Public Function ProgMsgBox (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, ByVal 
     If (hInst = INVALID_HANDLE_VALUE) Then Return(ERROR_INVALID_HANDLE)
     
     ''setup mbp
-    Dim mbp As MSGBOXPARAMS
-    ZeroMemory(@mbp, SizeOf(MSGBOXPARAMS))
-    With mbp
+    Dim lpMbp As LPMSGBOXPARAMS = Cast(LPMSGBOXPARAMS, LocalAlloc(LPTR, SizeOf(MSGBOXPARAMS)))
+    If (lpMbp = NULL) Then Return(GetLastError())
+    ZeroMemory(lpMbp, SizeOf(MSGBOXPARAMS))
+    With *lpMbp
         .cbSize             = SizeOf(MSGBOXPARAMS)
         .hwndOwner          = hDlg
         .hInstance          = hInst
@@ -102,7 +103,11 @@ Public Function ProgMsgBox (ByVal hInst As HINSTANCE, ByVal hDlg As HWND, ByVal 
         .dwLanguageId       = MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL)
     End With
     
-    Return(MessageBoxIndirect(@mbp))
+    Dim lRes As LRESULT = MessageBoxIndirect(lpMbp)
+    
+    ''return
+    If (LocalFree(Cast(HLOCAL, lpMbp)) = NULL) Then Return(GetLastError())
+    Return(lRes)
     
 End Function
 
