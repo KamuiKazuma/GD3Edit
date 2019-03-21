@@ -11,6 +11,9 @@
 
 #Include "header.bi"
 
+Declare Function PrepareHeader (ByVal pVgmHead As VGM_HEADER Ptr) As BOOL
+'Declare Function GetCSubVer (ByVal pubSubVer As UByte Ptr) As UINT32
+
 Public Function ReadVGMHeader (ByVal hFile As HANDLE, ByVal pVgmHead As VGM_HEADER Ptr) As LRESULT
     
     #If __FB_DEBUG__
@@ -139,7 +142,7 @@ Public Function MakeVgmAddrsOffs (ByVal pVgmHead As VGM_HEADER Ptr) As LRESULT
     
 End Function
 
-Public Function TranslateBcdCodeVer (ByVal dwBcdCode As DWORD32, ByVal lpszVer As LPTSTR) As BOOL
+/'Public Function TranslateBcdCodeVer (ByVal dwBcdCode As DWORD32, ByVal lpszVer As LPTSTR) As BOOL
     
     #If __FB_DEBUG__
         ? "Calling:", __FILE__; "\"; __FUNCTION__
@@ -147,12 +150,12 @@ Public Function TranslateBcdCodeVer (ByVal dwBcdCode As DWORD32, ByVal lpszVer A
         ? !"lpszVer\t= 0x"; Hex(lpszVer)
     #EndIf
     
-    ''create a local heap
-    Dim hHeap As HANDLE = HeapCreate(NULL, (4 * SizeOf(UByte)), (4 * SizeOf(UByte)))
-    If (hHeap = INVALID_HANDLE_VALUE) Then Return(FALSE)
+    '''create a local heap
+    'Dim hHeap As HANDLE = HeapCreate(NULL, (4 * SizeOf(UByte)), (4 * SizeOf(UByte)))
+    'If (hHeap = INVALID_HANDLE_VALUE) Then Return(FALSE)
     
     ''get sub version numbers
-    Dim pubSubVer As UByte Ptr = Cast(UByte Ptr, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, (4 * SizeOf(UByte))))
+    Dim pubSubVer As UByte Ptr = LocalAlloc(LPTR, (4 * SizeOf(UByte)))
     If (pubSubVer = NULL) Then Return(FALSE)
     pubSubVer[0] = HiWord(HiByte(dwBcdCode))
     pubSubVer[1] = HiWord(LoByte(dwBcdCode))
@@ -160,8 +163,8 @@ Public Function TranslateBcdCodeVer (ByVal dwBcdCode As DWORD32, ByVal lpszVer A
     pubSubVer[3] = LoWord(LoByte(dwBcdCode))
     
     ''figure out how large the version number should be
-    Dim cSubVer As UINT_PTR    ''number of sub version numbers
-    For iSubVer As UINT_PTR = 3 To 0 Step -1
+    Dim cSubVer As UINT32 = GetCSubVer(pubSubVer)
+    /'For iSubVer As UINT32 = 3 To 0 Step -1
         
         ''add up sub version numbers that are non-zero
         If (pubSubVer[iSubVer] > 0) Then
@@ -169,7 +172,7 @@ Public Function TranslateBcdCodeVer (ByVal dwBcdCode As DWORD32, ByVal lpszVer A
         Else
             Exit For
         End If
-    Next iSubVer
+    Next iSubVer'/
     
     ''format output string
     For iSubVer As UINT_PTR = 3 To cSubVer Step -1
@@ -183,11 +186,27 @@ Public Function TranslateBcdCodeVer (ByVal dwBcdCode As DWORD32, ByVal lpszVer A
     Next iSubVer
     
     ''return
-    If (HeapFree(hHeap, NULL, Cast(LPVOID, pubSubVer)) = FALSE) Then Return(FALSE)
-    If (HeapDestroy(hHeap) = FALSE) Then Return(FALSE)
+    'If (HeapFree(hHeap, NULL, Cast(LPVOID, pubSubVer)) = FALSE) Then Return(FALSE)
+    'If (HeapDestroy(hHeap) = FALSE) Then Return(FALSE)
+    If (LocalFree(pubSubVer) = NULL) Then Return(FALSE)
     SetLastError(ERROR_SUCCESS)
     Return(TRUE)
     
 End Function
+
+Private Function GetCSubVer (ByVal pubSubVer As UByte Ptr) As UINT32
+    
+    Dim cSubVer As UINT32
+    For iSubVer As UINT32 = 3 To 0 Step -1
+        If (pubSubVer[iSubVer] > 0) Then
+            cSubVer += 1
+        Else
+            Exit For
+        End If
+    Next iSubVer
+    
+    Return(cSubVer)
+    
+End Function'/
 
 ''EOF

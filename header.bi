@@ -97,4 +97,6 @@ Declare Function AboutMsgBox (ByVal hDlg As HWND) As BOOL
 '/
 Declare Function InitMainChildren (ByVal hDlg As HWND) As BOOL
 
+Declare Function UpdateMainUI (ByVal hDlg As HWND, ByVal pFni As FILENAMEINFO Ptr, ByVal pVgmHead As VGM_HEADER Ptr, ByVal bShowFullPath As BOOL) As BOOL
+
 ''EOF

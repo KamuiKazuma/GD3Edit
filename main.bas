@@ -23,7 +23,6 @@
 
 ''include header file
 #Include "header.bi"
-'#Include "mod/errmsgbox/errmsgbox.bi"
 #Include "mod/heapptrlist/heapptrlist.bi"
 
 Dim Shared hInstance As HINSTANCE   ''global app instance handle
@@ -31,14 +30,12 @@ Dim Shared hWin As HWND             ''global main window handle
 
 Dim lpszCmdLine As LPSTR            ''command line string to pass to WinMain
 
-Dim uExitCode As UINT32             ''program exit code
-
 hInstance = GetModuleHandle(NULL)   ''get a handle to this module's instance
 lpszCmdLine = GetCommandLine()      ''get the command-line
 InitCommonControls()
 
 ''start the application
-uExitCode = Cast(UINT32, WinMain(hInstance, NULL, lpszCmdLine, SW_SHOWNORMAL))
+Dim uExitCode As UINT32 = Cast(UINT32, WinMain(hInstance, NULL, lpszCmdLine, SW_SHOWNORMAL))
 
 ''exit app
 #If __FB_DEBUG__
@@ -236,7 +233,7 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
                             ''close file
                             If (CloseHandle(hFile) = FALSE) Then Return(FatalSysErrMsgBox(hWnd, GetLastError()))
                             
-                            ''update UI
+                            /'''update UI
                             If (SetMainWndTitle(hWnd, Cast(LPCTSTR, fni.lpszFileTitle)) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
                             
                             SetLastError(UpdateHeadListView(GetDlgItem(hWnd, IDC_LIV_MAIN), @vgmHead))
@@ -249,6 +246,13 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
                             
                             If (fni.bReadOnly = TRUE) Then
                                 If (SetSbrItemTextId(GetDlgItem(hWnd, IDC_SBR_MAIN), hInstance, SBR_PART_READONLY, IDS_READONLY, 32) = FALSE) Then Return(FALSE)
+                            End If'/
+                            If (UpdateMainUI(hWnd, @fni, @vgmHead, TRUE) = FALSE) Then
+                                If (GetLastError()) Then 
+                                    Return(SysErrMsgBox(hWnd, GetLastError()))
+                                Else
+                                    Return(ProgMsgBox(hInstance, hWnd, IDS_MSG_UIUPFAIL, IDS_APPNAME, MB_ICONERROR))
+                                End If
                             End If
                             
                             ''unlock the file name heap
@@ -260,7 +264,7 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
                             
                         Case IDM_CLOSE
                             
-                            Select Case ProgMsgBox(hInstance, hWnd, IDS_MSG_UNSAVED, IDS_APPNAME, MB_ICONWARNING Or MB_YESNOCANCEL)
+                            Select Case (ProgMsgBox(hInstance, hWnd, IDS_MSG_UNSAVED, IDS_APPNAME, MB_ICONWARNING Or MB_YESNOCANCEL))
                                 Case IDYES
                                     ''save file
                                     ''clear the UI
@@ -269,7 +273,7 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
                                     ''don't save the file
                                     ''clear the UI
                                     If (SetMainWndTitle(hWnd, NULL) = FALSE) Then SysErrMsgBox(hWnd, GetLastError())
-                                Case IDCANCEL
+                                'Case IDCANCEL
                                     ''do nothing
                             End Select
                             
@@ -621,6 +625,36 @@ Private Function InitMainChildren (ByVal hDlg As HWND) As BOOL
     
     ''restore cursor
     SetCursor(hCurPrev)
+    
+    ''return
+    SetLastError(ERROR_SUCCESS)
+    Return(TRUE)
+    
+End Function
+
+Private Function UpdateMainUI (ByVal hDlg As HWND, ByVal pFni As FILENAMEINFO Ptr, ByVal pVgmHead As VGM_HEADER Ptr, ByVal bShowFullPath As BOOL) As BOOL
+    
+    #If __FB_DEBUG__
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
+        ? !"hDlg\t= 0x"; Hex(hDlg)
+        ? !"pFni\t= 0x"; Hex(pFni)
+        ? !"pVgmHead\t= 0x"; Hex(pVgmHead)
+    #EndIf
+    
+    ''update title bar
+    If (bShowFullPath) Then
+        If (SetMainWndTitle(hDlg, Cast(LPCTSTR, pFni->lpszFile)) = FALSE) Then Return(FALSE)
+    Else
+        If (SetMainWndTitle(hDlg, Cast(LPCTSTR, pFni->lpszFileTitle)) = FALSE) Then Return(FALSE)
+    End If
+    
+    ''update listview
+    SetLastError(UpdateHeadListView(GetDlgItem(hDlg, IDC_LIV_MAIN), pVgmHead))
+    If (GetLastError()) Then Return(FALSE)
+    
+    ''update the statusbar
+    SetLastError(UpdateMainStatusBar(GetDlgItem(hWnd, IDC_SBR_MAIN), pVgmHead->dwVersion, pFni->bReadOnly))
+    If (GetLastError()) Then Return(FALSE)
     
     ''return
     SetLastError(ERROR_SUCCESS)

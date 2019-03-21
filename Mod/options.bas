@@ -6,7 +6,13 @@
 
 #Include "header.bi"
 #Include "mod/heapptrlist/heapptrlist.bi"
-'#Include "mod/errmsgbox/errmsgbox.bi"
+
+''private function declarations
+Declare Function GenOptsProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPARAM, ByVal lParam As LPARAM) As LRESULT
+Declare Function LoadCfg_GenOpts (ByVal hHeap As HANDLE, ByVal hkProg As HKEY, ByVal pGenOpts As OPTS_GEN Ptr) As BOOL
+Declare Function SaveCfg_GenOpts (ByVal hHeap As HANDLE, ByVal hkProg As HKEY, ByVal pGenOpts As OPTS_GEN Ptr) As BOOL
+Declare Function GetSubKeyCount (ByVal dwMask As DWORD32, ByVal pcSubKey As PULONG32) As BOOL
+Declare Function OpenProgHKey (ByVal phkOut As PHKEY, ByVal wAppName As WORD, ByVal samDesired As REGSAM, ByVal pdwDisp As PDWORD32) As BOOL
 
 Public Function StartOptionsMenu (ByVal hDlg As HWND, ByVal nStartPage As LONG32) As LRESULT
     
@@ -100,9 +106,17 @@ Private Function GenOptsProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wP
     Select Case uMsg
         Case WM_INITDIALOG
             
+            ''load options
             Dim opts As OPTIONS
-            If (LoadConfig(@opts, CFG_GENERAL) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError))
+            SetLastError(LoadConfig(@opts, CFG_GENERAL))
+            If (GetLastError()) Then Return(SysErrMsgBox(hWnd, GetLastError()))
             genOpts = opts.general
+            
+            If (genOpts.bShowFullPath = TRUE) Then
+                If (CheckDlgButton(hWnd, IDC_CHK_SHOWFULLPATH, BST_CHECKED) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
+            Else
+                If (CheckDlgButton(hWnd, IDC_CHK_SHOWFULLPATH, BST_UNCHECKED) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
+            End If
             
         Case WM_COMMAND
             
@@ -126,7 +140,7 @@ Private Function GenOptsProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wP
                                 genOpts.bShowFullPath = FALSE
                             End If
                             
-                            SendMessage(hWnd, PSM_CHANGED, Cast(WPARAM, hWnd), NULL)
+                            SendMessage(hwndPrsht, PSM_CHANGED, Cast(WPARAM, hWnd), NULL)
                             
                     End Select
                     
@@ -140,8 +154,8 @@ Private Function GenOptsProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wP
                     
                     ''get page handle
                     ''todo: use PSM_GETCURRENTPAGEHWND to get hwndPrsht
-                    'hwndPrsht = Cast(HWND, Cast(LPNMHDR, lParam)->hwndFrom)
-                    hwndPrsht = Cast(HWND, SendMessage(hWnd, PSM_GETCURRENTPAGEHWND, NULL, NULL))
+                    hwndPrsht = Cast(HWND, Cast(LPNMHDR, lParam)->hwndFrom)
+                    'hwndPrsht = Cast(HWND, SendMessage(hWnd, PSM_GETCURRENTPAGEHWND, NULL, NULL))
                     If (hwndPrsht = INVALID_HANDLE_VALUE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
                     
                 Case PSN_KILLACTIVE
@@ -151,7 +165,9 @@ Private Function GenOptsProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wP
                     
                 Case PSN_APPLY
                     
-                    
+                    Dim opts As OPTIONS
+                    SetLastError(SaveConfig(@opts, CFG_GENERAL))
+                    If (GetLastError()) Then Return(SysErrMsgBox(hWnd, GetLastError))
                     
                 Case PSN_QUERYCANCEL
                     
@@ -178,10 +194,8 @@ Public Function LoadConfig (ByVal pOpts As OPTIONS Ptr, ByVal dwMask As DWORD32)
         ? !"dwMask\t= 0x"; Hex(dwMask)
     #EndIf
     
-    ''make sure pOpts is a valid pointer
+    ''validate parameters
     If (pOpts = NULL) Then Return(ERROR_INVALID_PARAMETER)
-    
-    ''make sure we have a valid mask
     If (dwMask = NULL) Then Return(ERROR_INVALID_PARAMETER)
     
     ''create a local heap
@@ -208,29 +222,29 @@ Public Function LoadConfig (ByVal pOpts As OPTIONS Ptr, ByVal dwMask As DWORD32)
         
     End If
     
-    ''close the registry key
+    ''return
     SetLastError(RegCloseKey(hkProg))
     If (GetLastError()) Then Return(GetLastError())
-    
-    ''destroy the local heap
     If (HeapDestroy(hHeap) = FALSE) Then Return(GetLastError())
-    
-    ''return
     Return(ERROR_SUCCESS)
     
 End Function
 
 Private Function LoadCfg_GenOpts (ByVal hHeap As HANDLE, ByVal hkProg As HKEY, ByVal pGenOpts As OPTS_GEN Ptr) As BOOL
     
-    ''lock the heap
+    #If __FB_DEBUG__
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
+        ? !"hHeap\t= 0x"; Hex(hHeap)
+        ? !"hkProg\t= 0x"; Hex(hkProg)
+        ? !"pGenOpts\t= 0x"; Hex(pGenOpts)
+    #EndIf
+    
     If (HeapLock(hHeap) = FALSE) Then Return(FALSE)
     
-    ''allocate a buffer for the sub-key names
+    ''load sub-key names
     Dim plpszSubKey As LPTSTR Ptr
     SetLastError(HeapAllocPtrList(hHeap, Cast(LPVOID Ptr, plpszSubKey), OPT_CB_SUBKEY, OPT_C_SUBKEY_GEN))
     If (GetLastError()) Then Return(FALSE)
-    
-    ''load the sub-key names
     SetLastError(LoadStringRange(hInstance, plpszSubKey, IDS_REG_SHOWFULLPATH, OPT_CCH_SUBKEY, OPT_C_SUBKEY_GEN))
     If (GetLastError()) Then Return(FALSE)
     
@@ -241,14 +255,75 @@ Private Function LoadCfg_GenOpts (ByVal hHeap As HANDLE, ByVal hkProg As HKEY, B
     SetLastError(RegQueryValueEx(hkProg, plpszSubKey[0], NULL, NULL, Cast(LPBYTE, @pGenOpts->bShowFullPath), @cbSize))
     If (GetLastError()) Then Return(FALSE)
     
-    ''free the buffer used for the sub-key names
+    ''return
     SetLastError(HeapFreePtrList(hHeap, Cast(LPVOID Ptr, plpszSubKey), OPT_CB_SUBKEY, OPT_C_SUBKEY_GEN))
     If (GetLastError()) Then Return(FALSE)
-    
-    ''unlock the heap
     If (HeapUnlock(hHeap) = FALSE) Then Return(FALSE)
+    SetLastError(ERROR_SUCCESS)
+    Return(TRUE)
+    
+End Function
+
+Public Function SaveConfig (ByVal pOpts As OPTIONS Ptr, ByVal dwMask As DWORD32) As LRESULT
+    
+    #If __FB_DEBUG__
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
+        ? !"pOpts\t= 0x"; Hex(pOpts)
+        ? !"dwMask\t= 0x"; Hex(dwMask)
+    #EndIf
+    
+    ''validate parameters
+    If (pOpts = NULL) Then Return(ERROR_INVALID_PARAMETER)
+    If (dwMask = NULL) Then Return(ERROR_INVALID_PARAMETER)
+    
+    ''create a local heap
+    Dim cSubKey As ULONG32
+    If (GetSubKeyCount(dwMask, @cSubKey) = FALSE) Then Return(GetLastError())
+    Dim hHeap As HANDLE = HeapCreate(NULL, OPT_CB_SUBKEY, (OPT_CB_SUBKEY * cSubKey))
+    If (hHeap = INVALID_HANDLE_VALUE) Then Return(GetLastError())
+    
+    ''open app registry key
+    Dim hkProg As HKEY
+    Dim dwDisp As DWORD32
+    If (OpenProgHKey(@hkProg, IDS_APPNAME, KEY_WRITE, @dwDisp) = FALSE) Then Return(GetLastError())
+    
+    If (dwMask And CFG_GENERAL) Then
+        If (SaveCfg_GenOpts(hHeap, hkProg, @pOpts->general) = FALSE) Then Return(GetLastError())
+    End If
     
     ''return
+    SetLastError(RegCloseKey(hkProg))
+    If (GetLastError()) Then Return(GetLastError())
+    If (HeapDestroy(hHeap) = FALSE) Then Return(GetLastError())
+    Return(ERROR_SUCCESS)
+    
+End Function
+
+Private Function SaveCfg_GenOpts (ByVal hHeap As HANDLE, ByVal hkProg As HKEY, ByVal pGenOpts As OPTS_GEN Ptr) As BOOL
+    
+    #If __FB_DEBUG__
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
+        ? !"hHeap\t= 0x"; Hex(hHeap)
+        ? !"hkProg\t= 0x"; Hex(hkProg)
+        ? !"pGenOpts\t= 0x"; Hex(pGenOpts)
+    #EndIf
+    
+    If (HeapLock(hHeap) = FALSE) Then Return(FALSE)
+    
+    ''load sub-key names
+    Dim plpszSubKey As LPTSTR Ptr
+    SetLastError(HeapAllocPtrList(hHeap, Cast(LPVOID Ptr, plpszSubKey), OPT_CB_SUBKEY, OPT_C_SUBKEY_GEN))
+    If (GetLastError()) Then Return(FALSE)
+    SetLastError(LoadStringRange(hInstance, plpszSubKey, IDS_REG_SHOWFULLPATH, OPT_CCH_SUBKEY, OPT_C_SUBKEY_GEN))
+    If (GetLastError()) Then Return(FALSE)
+    
+    SetLastError(RegSetValueEx(hkProg, Cast(LPCTSTR, plpszSubKey[0]), NULL, REG_BINARY, Cast(LPBYTE, @pGenOpts->bShowFullPath), SizeOf(pGenOpts->bShowFullPath)))
+    If (GetLastError()) Then Return(FALSE)
+    
+    ''return
+    SetLastError(HeapFreePtrList(hHeap, Cast(LPVOID Ptr, plpszSubKey), OPT_CB_SUBKEY, OPT_C_SUBKEY_GEN))
+    If (GetLastError()) Then Return(FALSE)
+    If (HeapUnlock(hHeap) = FALSE) Then Return(FALSE)
     SetLastError(ERROR_SUCCESS)
     Return(TRUE)
     
@@ -275,10 +350,6 @@ Private Function GetSubKeyCount (ByVal dwMask As DWORD32, ByVal pcSubKey As PULO
     If (dwMask And CFG_GENERAL) Then *pcSubKey += OPT_C_SUBKEY_GEN
     If (dwMask And CFG_LVHEAD) Then *pcSubKey += OPT_C_SUBKEY_LVHEAD
     
-    #If __FB_DEBUG__
-        ? !"*pcSubKey\t= "; *pcSubKey
-    #EndIf
-    
     ''return
     SetLastError(ERROR_SUCCESS)
     Return(TRUE)
@@ -295,12 +366,8 @@ Private Function OpenProgHKey (ByVal phkOut As PHKEY, ByVal wAppName As WORD, By
         ? !"pdwDisp\t= 0x"; Hex(pdwDisp)
     #EndIf
     
-    ''create a local heap
-    Dim hHeap As HANDLE = HeapCreate(NULL, CB_APPNAME, CB_APPNAME)
-    If (hHeap = INVALID_HANDLE_VALUE) Then Return(FALSE)
-    
     ''allocate a buffer for the app name
-    Dim lpszAppName As LPTSTR = Cast(LPTSTR, HeapAlloc(hHeap, HEAP_ZERO_MEMORY, CB_APPNAME))
+    Dim lpszAppName As LPTSTR = Cast(LPTSTR, LocalAlloc(LPTR, CB_APPNAME))
     If (lpszAppName = NULL) Then Return(FALSE)
     
     ''load the app name
@@ -319,10 +386,8 @@ Private Function OpenProgHKey (ByVal phkOut As PHKEY, ByVal wAppName As WORD, By
     SetLastError(RegCloseKey(hkSoftware))
     If (GetLastError()) Then Return(FALSE)
     
-    ''destroy the local heap
-    If (HeapDestroy(hHeap) = FALSE) Then Return(FALSE)
-    
     ''return
+    If (LocalFree(Cast(HLOCAL, lpszAppName)) = NULL) Then Return(FALSE)
     SetLastError(ERROR_SUCCESS)
     Return(TRUE)
     

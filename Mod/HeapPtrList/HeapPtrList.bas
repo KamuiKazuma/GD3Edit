@@ -17,7 +17,7 @@
 Public Function HeapAllocPtrList (ByVal hHeap As HANDLE, ByRef plpList As LPVOID Ptr, ByVal cbItem As SIZE_T, ByVal cItems As ULONG32) As LRESULT
     
     #If __FB_DEBUG__
-        ? "Calling:", __FUNCTION__
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
         ? !"hHeap\t= 0x"; Hex(hHeap, 8)
         ? !"plpList\t= 0x"; Hex(plpList, 8)
         ? !"cbItem\t= 0x"; Hex(cbItem, 8)
@@ -42,9 +42,8 @@ Public Function HeapAllocPtrList (ByVal hHeap As HANDLE, ByRef plpList As LPVOID
         #EndIf
     Next iItem
     
-    ''release the lock on the heap
+    ''return
     If (HeapUnlock(hHeap) = FALSE) Then Return(GetLastError())
-    
     Return(ERROR_SUCCESS)
     
 End Function
@@ -52,16 +51,13 @@ End Function
 Public Function HeapFreePtrList (ByVal hHeap As HANDLE, ByRef plpList As LPVOID Ptr, ByVal cbItem As SIZE_T, ByVal cItems As ULONG32) As LRESULT
     
     #If __FB_DEBUG__
-        ? "Calling:", __FUNCTION__
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
         ? !"hHeap\t= 0x"; Hex(hHeap, 8)
         ? !"plpList\t= 0x"; Hex(plpList, 8)
         ? !"cbItem\t= 0x"; Hex(cbItem, 8)
         ? !"cItems\t= 0x"; Hex(cItems, 8)
         ? !"Total size: "; (cbItem * cItems); "Bytes"
     #EndIf
-    
-    ''make sure a valid list is being passed
-    If (plpList = NULL) Then Return(ERROR_INVALID_PARAMETER)
     
     ''get a lock on the heap
     If (HeapLock(hHeap) = FALSE) Then Return(GetLastError())
@@ -77,9 +73,8 @@ Public Function HeapFreePtrList (ByVal hHeap As HANDLE, ByRef plpList As LPVOID 
     ''free the list of pointers
     If (HeapFree(hHeap, NULL, Cast(LPVOID, plpList)) = FALSE) Then Return(GetLastError())
     
-    ''release the lock on the heap
+    ''return
     If (HeapUnlock(hHeap) = FALSE) Then Return(GetLastError())
-    
     Return(ERROR_SUCCESS)
     
 End Function
@@ -87,7 +82,7 @@ End Function
 Public Function LoadStringRange (ByVal hInst As HINSTANCE, ByVal plpszBuff As LPTSTR Ptr, ByVal wIdFirst As WORD, ByVal cchString As ULONG32, ByVal cStrings As ULONG32) As LRESULT
     
     #If __FB_DEBUG__
-        ? "Calling:", __FUNCTION__
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
         ? !"hInst\t= 0x"; Hex(hInst, 8)
         ? !"plpszBuff\t= 0x"; Hex(plpszBuff, 8)
         ? !"wIdFirst\t= 0x"; Hex(wIdFirst, 4)

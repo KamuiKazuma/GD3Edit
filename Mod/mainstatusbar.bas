@@ -4,7 +4,11 @@
     
 '/
 
-#Include "header.bi"
+#Include "inc/mainstatusbar.bas"
+'#Include "inc/vgmhead.bi" ''for TranslateBcdCodeVer
+#Include "inc/translatevgmver.bi"
+
+Extern hInstance As HINSTANCE
 
 Public Function InitMainStatusBar (ByVal hWnd As HWND) As LRESULT
     
@@ -29,30 +33,36 @@ Public Function InitMainStatusBar (ByVal hWnd As HWND) As LRESULT
     
 End Function
 
-Public Function SetSbrItemTextId (ByVal hWnd As HWND, ByVal hInst As HINSTANCE, ByVal dwPartId As DWORD32, ByVal wTextId As WORD, ByVal cchText As ULONG32) As BOOL
+Public Function UpdateMainStatusBar (ByVal hWnd As HWND, ByVal dwBcdCode As DWORD32, ByVal bReadOnly As BOOL) As LRESULT
     
-    ''validate parameters
-    If ((hWnd = INVALID_HANDLE_VALUE) Or (hInst = INVALID_HANDLE_VALUE)) Then
-        SetLastError(ERROR_INVALID_HANDLE)
-        Return(FALSE)
+    #If __FB_DEBUG__
+        ? "Calling:", __FILE__; "\"; __FUNCTION__
+        ? !"hWnd\t= 0x"; Hex(hWnd)
+        ? !"dwBcdCode\t= 0x"; Hex(dwBcdCode)
+        ? !"bReadOnly\t= "; bReadOnly
+    #EndIf
+    
+    ''setup items
+    Dim hHeap As HANDLE = HeapCreate(NULL, (36 * SizeOf(TCHAR)), (36 * SizeOf(TCHAR)))
+    If (hHeap = INVALID_HANDLE_VALUE) Then Return(FALSE)
+    Dim lpszVer As LPTSTR = HeapAlloc(hHeap, HEAP_ZERO_MEMORY, (12 * SizeOf(TCHAR))
+    If (lpszVer = NULL) Then Return(GetLastError())
+    Dim (lpszReadOnly As LPTSTR = HeapAlloc(hHeap, HEAP_ZERO_MEMORY, (24 * SizeOf(TCHAR))
+    If (lpszReadOnly = NULL) Then Return(GetLastError())
+    If (TranslateBcdCodeVer(dwBcdCode, lpszVer) = FALSE) Then Return(GetLastError())
+    If (LoadString(hInstance, IDS_READONLY, lpszReadOnly, 24) = 0) Then Return(GetLastError())
+    
+    ''update statusbar
+    SendMessage(hWnd, SB_SETTEXT, SBR_PART_VER, Cast(LPARAM, lpszVer))
+    If (bReadOnly) Then
+        SendMessage(hWnd, SB_SETTEXT, SBR_PART_READONLY, Cast(LPARAM, lpszReadOnly))
     End If
-    If ((cchText = 0) Or (dwPartId > C_SBR_PART)) Then
-        SetLastError(ERROR_INVALID_PARAMETER)
-        Return(FALSE)
-    End If
-    
-    ''load the string
-    Dim lpszText As LPTSTR = LocalAlloc(LPTR, (cchText * SizeOf(TCHAR)))
-    If (lpszText = NULL) Then Return(FALSE)
-    If (LoadString(hInst, wTextId, lpszText, cchText) = 0) Then Return(FALSE)
-    
-    ''set the text
-    If (SendMessage(hWnd, SB_SETTEXT, dwPartId, Cast(LPARAM, lpszText)) = FALSE) Then Return(FALSE)
     
     ''return
-    If (LocalFree(Cast(HLOCAL, lpszText)) = NULL) Then Return(FALSE)
-    SetLastError(ERROR_SUCCESS)
-    Return(TRUE)
+    If (HeapFree(hHeap, NULL, lpszVer) = FALSE) Then Return(GetLastError())
+    If (HeapFree(hHeap, NULL, lpszReadOnly) = FALSE) Then Return(GetLastError())
+    If (HeapDestroy(hHeap) = FALSE) Then Return(GetLastError())
+    Return(ERROR_SUCCESS)
     
 End Function
 

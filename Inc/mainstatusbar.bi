@@ -32,6 +32,8 @@
 '/
 Declare Function InitMainStatusBar (ByVal hWnd As HWND) As LRESULT
 
+Declare Function UpdateMainStatusBar (ByVal hWnd As HWND, ByVal dwBcdCode As DWORD32, ByVal bReadOnly As BOOL) As LRESULT
+
 /'  SetSbrItemTextId:
     /'  Description:
         Sets a statusbar item's text from a string resource.
@@ -58,6 +60,6 @@ Declare Function InitMainStatusBar (ByVal hWnd As HWND) As LRESULT
         for more detailed information.
     '/
 '/
-Declare Function SetSbrItemTextId (ByVal hWnd As HWND, ByVal hInst As HINSTANCE, ByVal dwPartId As DWORD32, ByVal wTextId As WORD, ByVal cchText As ULONG32) As BOOL
+'Declare Function SetSbrItemTextId (ByVal hWnd As HWND, ByVal hInst As HINSTANCE, ByVal dwPartId As DWORD32, ByVal wTextId As WORD, ByVal cchText As ULONG32) As BOOL
 
 ''EOF
