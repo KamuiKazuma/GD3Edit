@@ -233,20 +233,7 @@ Function MainProc (ByVal hWnd As HWND, ByVal uMsg As UINT32, ByVal wParam As WPA
                             ''close file
                             If (CloseHandle(hFile) = FALSE) Then Return(FatalSysErrMsgBox(hWnd, GetLastError()))
                             
-                            /'''update UI
-                            If (SetMainWndTitle(hWnd, Cast(LPCTSTR, fni.lpszFileTitle)) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
-                            
-                            SetLastError(UpdateHeadListView(GetDlgItem(hWnd, IDC_LIV_MAIN), @vgmHead))
-                            If (GetLastError()) Then Return(SysErrMsgBox(hWnd, GetLastError()))
-                            
-                            ''update statusbar
-                            Dim szVer As ZString*12
-                            If (TranslateBcdCodeVer(vgmHead.dwVersion, @szVer) = FALSE) Then Return(SysErrMsgBox(hWnd, GetLastError()))
-                            If (SendMessage(GetDlgItem(hWnd, IDC_SBR_MAIN), SB_SETTEXT, SBR_PART_VER, Cast(LPARAM, @szVer)) = FALSE) Then Return(ProgMsgBox(hInstance, hWnd, IDS_MSG_UIUPFAIL, IDS_APPNAME, MB_ICONERROR))
-                            
-                            If (fni.bReadOnly = TRUE) Then
-                                If (SetSbrItemTextId(GetDlgItem(hWnd, IDC_SBR_MAIN), hInstance, SBR_PART_READONLY, IDS_READONLY, 32) = FALSE) Then Return(FALSE)
-                            End If'/
+                            ''update UI
                             If (UpdateMainUI(hWnd, @fni, @vgmHead, TRUE) = FALSE) Then
                                 If (GetLastError()) Then 
                                     Return(SysErrMsgBox(hWnd, GetLastError()))
@@ -653,7 +640,7 @@ Private Function UpdateMainUI (ByVal hDlg As HWND, ByVal pFni As FILENAMEINFO Pt
     If (GetLastError()) Then Return(FALSE)
     
     ''update the statusbar
-    SetLastError(UpdateMainStatusBar(GetDlgItem(hWnd, IDC_SBR_MAIN), pVgmHead->dwVersion, pFni->bReadOnly))
+    SetLastError(UpdateMainStatusBar(GetDlgItem(hDlg, IDC_SBR_MAIN), pVgmHead->dwVersion, pFni->bReadOnly))
     If (GetLastError()) Then Return(FALSE)
     
     ''return

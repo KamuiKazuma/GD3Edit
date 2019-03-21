@@ -4,8 +4,10 @@
     
 '/
 
-#Include "inc/mainstatusbar.bas"
-'#Include "inc/vgmhead.bi" ''for TranslateBcdCodeVer
+#Include "defines.bi"
+#Include "windows.bi"
+#Include "win/commctrl.bi"
+#Include "inc/mainstatusbar.bi"
 #Include "inc/translatevgmver.bi"
 
 Extern hInstance As HINSTANCE
@@ -45,22 +47,22 @@ Public Function UpdateMainStatusBar (ByVal hWnd As HWND, ByVal dwBcdCode As DWOR
     ''setup items
     Dim hHeap As HANDLE = HeapCreate(NULL, (36 * SizeOf(TCHAR)), (36 * SizeOf(TCHAR)))
     If (hHeap = INVALID_HANDLE_VALUE) Then Return(FALSE)
-    Dim lpszVer As LPTSTR = HeapAlloc(hHeap, HEAP_ZERO_MEMORY, (12 * SizeOf(TCHAR))
+    Dim lpszVer As LPTSTR = HeapAlloc(hHeap, HEAP_ZERO_MEMORY, (12 * SizeOf(TCHAR)))
     If (lpszVer = NULL) Then Return(GetLastError())
-    Dim (lpszReadOnly As LPTSTR = HeapAlloc(hHeap, HEAP_ZERO_MEMORY, (24 * SizeOf(TCHAR))
-    If (lpszReadOnly = NULL) Then Return(GetLastError())
-    If (TranslateBcdCodeVer(dwBcdCode, lpszVer) = FALSE) Then Return(GetLastError())
-    If (LoadString(hInstance, IDS_READONLY, lpszReadOnly, 24) = 0) Then Return(GetLastError())
+    'Dim lpszReadOnly As LPTSTR = HeapAlloc(hHeap, HEAP_ZERO_MEMORY, (24 * SizeOf(TCHAR)))
+    'If (lpszReadOnly = NULL) Then Return(GetLastError())
+    If (TranslateVgmVer(dwBcdCode, lpszVer) = FALSE) Then Return(GetLastError())
+    'If (LoadString(hInstance, IDS_READONLY, lpszReadOnly, 24) = 0) Then Return(GetLastError())
     
     ''update statusbar
     SendMessage(hWnd, SB_SETTEXT, SBR_PART_VER, Cast(LPARAM, lpszVer))
-    If (bReadOnly) Then
-        SendMessage(hWnd, SB_SETTEXT, SBR_PART_READONLY, Cast(LPARAM, lpszReadOnly))
-    End If
+    'If (bReadOnly) Then
+    '    SendMessage(hWnd, SB_SETTEXT, SBR_PART_READONLY, Cast(LPARAM, lpszReadOnly))
+    'End If
     
     ''return
     If (HeapFree(hHeap, NULL, lpszVer) = FALSE) Then Return(GetLastError())
-    If (HeapFree(hHeap, NULL, lpszReadOnly) = FALSE) Then Return(GetLastError())
+    'If (HeapFree(hHeap, NULL, lpszReadOnly) = FALSE) Then Return(GetLastError())
     If (HeapDestroy(hHeap) = FALSE) Then Return(GetLastError())
     Return(ERROR_SUCCESS)
     

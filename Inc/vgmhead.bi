@@ -217,7 +217,7 @@ Type VGM_DATA_BLOCK Field = 1
 End Type
 
 Declare Function ReadVGMHeader (ByVal hFile As HANDLE, ByVal pVgmHead As VGM_HEADER Ptr) As LRESULT
-Declare Function PrepareHeader (ByVal pVgmHead As VGM_HEADER Ptr) As BOOL
+'Declare Function PrepareHeader (ByVal pVgmHead As VGM_HEADER Ptr) As BOOL
 Declare Function MakeVgmOffsAddrs (ByVal pVgmHead As VGM_HEADER Ptr) As LRESULT
 Declare Function MakeVgmAddrsOffs (ByVal pVgmHead As VGM_HEADER Ptr) As LRESULT
 
@@ -226,7 +226,6 @@ Declare Function MakeVgmAddrsOffs (ByVal pVgmHead As VGM_HEADER Ptr) As LRESULT
     lpszVer:LPTSTR      -   Pointer to a string to recieve the generated
                             string.
 '/
-Declare Function TranslateBcdCodeVer (ByVal dwBcdCode As DWORD32, ByVal lpszVer As LPTSTR) As BOOL
-
+'Declare Function TranslateBcdCodeVer (ByVal dwBcdCode As DWORD32, ByVal lpszVer As LPTSTR) As BOOL
 
 ''EOF
